@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String?
+  googleId     String?  @unique
+  facebookId   String?  @unique
+  createdAt    DateTime @default(now())
+  watches      Watch[]
+}
+
+model Watch {
+  id               Int          @id @default(autoincrement())
+  ownerId          Int
+  owner            User         @relation(fields: [ownerId], references: [id])
+  serialNumberHash String       @unique
+  brand            String
+  model            String
+  publicId         String       @unique @default(uuid())
+  qrCodeUrl        String?
+  createdAt        DateTime     @default(now())
+  events           WatchEvent[]
+  files            FileRecord[]
+}
+
+model WatchEvent {
+  id          Int          @id @default(autoincrement())
+  watchId     Int
+  watch       Watch        @relation(fields: [watchId], references: [id])
+  eventType   String // MINT, SERVICE, TRANSFER, AUTH
+  payloadJson String // JSON string
+  payloadHash String
+  txHash      String?
+  blockNumber Int?
+  timestamp   DateTime     @default(now())
+  files       FileRecord[]
+}
+
+model FileRecord {
+  id        Int         @id @default(autoincrement())
+  watchId   Int?
+  watch     Watch?      @relation(fields: [watchId], references: [id])
+  eventId   Int?
+  event     WatchEvent? @relation(fields: [eventId], references: [id])
+  url       String
+  type      String
+  createdAt DateTime    @default(now())
+}
