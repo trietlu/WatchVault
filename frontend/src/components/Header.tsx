@@ -33,14 +33,15 @@ export default function Header() {
 
     return (
         <header className="bg-white border-b border-medium-grey sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="max-w-7xl mx-auto px-6 py-2">
                 <div className="flex items-center justify-between">
                     {/* Logo */}
-                    <Link href="/dashboard" className="flex items-center gap-2 group">
-                        <Watch className="w-8 h-8 text-capital-blue transition-transform group-hover:scale-110" />
-                        <span className="text-2xl font-bold text-capital-blue">
-                            WatchVault
-                        </span>
+                    <Link href="/dashboard" className="flex items-center group">
+                        <img
+                            src="/logo.png"
+                            alt="WatchVault"
+                            className="h-20 transition-transform group-hover:scale-105"
+                        />
                     </Link>
 
                     {/* User Actions */}

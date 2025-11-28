@@ -46,9 +46,12 @@ export default function RegisterPage() {
         <div className="min-h-screen bg-light-grey flex items-center justify-center p-6">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-                    <Watch className="w-10 h-10 text-capital-blue" />
-                    <span className="text-3xl font-bold text-capital-blue">WatchVault</span>
+                <Link href="/" className="flex items-center justify-center mb-8">
+                    <img
+                        src="/logo.png"
+                        alt="WatchVault"
+                        className="h-24"
+                    />
                 </Link>
 
                 {/* Register Card */}

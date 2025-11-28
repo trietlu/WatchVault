@@ -8,11 +8,12 @@ export default function Home() {
         <div className="min-h-screen bg-light-grey">
             {/* Navigation */}
             <nav className="bg-white border-b border-medium-grey sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Watch className="w-8 h-8 text-capital-blue" />
-                        <span className="text-2xl font-bold text-capital-blue">WatchVault</span>
-                    </div>
+                <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
+                    <img
+                        src="/logo.png"
+                        alt="WatchVault"
+                        className="h-20"
+                    />
                     <div className="flex items-center gap-4">
                         <Link href="/login" className="btn-ghost">
                             Sign In
@@ -220,10 +221,11 @@ export default function Home() {
             {/* Footer */}
             <footer className="bg-white border-t border-medium-grey py-12 px-6">
                 <div className="max-w-7xl mx-auto text-center">
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <Watch className="w-6 h-6 text-capital-blue" />
-                        <span className="text-xl font-bold text-capital-blue">WatchVault</span>
-                    </div>
+                    <img
+                        src="/logo.png"
+                        alt="WatchVault"
+                        className="h-8 mb-4"
+                    />
                     <p className="text-text-grey text-sm">
                         Securing luxury timepiece provenance on the blockchain
                     </p>
