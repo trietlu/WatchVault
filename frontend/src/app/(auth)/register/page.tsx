@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import api from '@/lib/api';
 import { Watch, Mail, Lock, ArrowRight } from 'lucide-react';
+import GoogleLoginButton from '@/components/GoogleLoginButton';
+import FacebookLoginButton from '@/components/FacebookLoginButton';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
@@ -13,6 +17,7 @@ export default function RegisterPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { login } = useAuthStore();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,8 +37,7 @@ export default function RegisterPage() {
 
         try {
             const res = await api.post('/auth/register', { email, password });
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('user', JSON.stringify(res.data.user));
+            login(res.data.token, res.data.user);
             router.push('/dashboard');
         } catch (err: any) {
             setError(err.response?.data?.error || 'Registration failed. Please try again.');
@@ -47,10 +51,13 @@ export default function RegisterPage() {
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <Link href="/" className="flex items-center justify-center mb-8">
-                    <img
+                    <Image
                         src="/logo.png"
                         alt="WatchVault"
-                        className="h-24"
+                        width={240}
+                        height={96}
+                        className="h-24 w-auto"
+                        priority
                     />
                 </Link>
 
@@ -59,6 +66,21 @@ export default function RegisterPage() {
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-black mb-2">Create Account</h1>
                         <p className="text-text-grey">Start preserving your collection</p>
+                    </div>
+
+                    {/* OAuth Buttons */}
+                    <div className="space-y-3 mb-8">
+                        <GoogleLoginButton />
+                        <FacebookLoginButton />
+                    </div>
+
+                    <div className="relative mb-8">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-medium-grey"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-4 bg-white text-text-grey">Or continue with email</span>
+                        </div>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">

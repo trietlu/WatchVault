@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import api from '@/lib/api';
 import { Watch, Mail, Lock, ArrowRight } from 'lucide-react';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
 import FacebookLoginButton from '@/components/FacebookLoginButton';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -14,6 +16,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { login } = useAuthStore();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -22,8 +25,7 @@ export default function LoginPage() {
 
         try {
             const res = await api.post('/auth/login', { email, password });
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('user', JSON.stringify(res.data.user));
+            login(res.data.token, res.data.user);
             router.push('/dashboard');
         } catch (err: any) {
             setError(err.response?.data?.error || 'Invalid credentials. Please try again.');
@@ -37,10 +39,13 @@ export default function LoginPage() {
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <Link href="/" className="flex items-center justify-center mb-8">
-                    <img
+                    <Image
                         src="/logo.png"
                         alt="WatchVault"
-                        className="h-24"
+                        width={240}
+                        height={96}
+                        className="h-24 w-auto"
+                        priority
                     />
                 </Link>
 

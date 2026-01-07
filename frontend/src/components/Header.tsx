@@ -1,31 +1,18 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { Watch, LogOut, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { LogOut, User } from 'lucide-react';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
-    const [userEmail, setUserEmail] = useState<string>('');
-
-    useEffect(() => {
-        // Get user email from localStorage
-        const user = localStorage.getItem('user');
-        if (user) {
-            try {
-                const userData = JSON.parse(user);
-                setUserEmail(userData.email);
-            } catch (e) {
-                console.error('Error parsing user data:', e);
-            }
-        }
-    }, []);
+    const { user, logout } = useAuthStore();
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        logout();
         router.push('/');
     };
 
@@ -37,20 +24,23 @@ export default function Header() {
                 <div className="flex items-center justify-between">
                     {/* Logo */}
                     <Link href="/dashboard" className="flex items-center group">
-                        <img
+                        <Image
                             src="/logo.png"
                             alt="WatchVault"
-                            className="h-20 transition-transform group-hover:scale-105"
+                            width={200}
+                            height={80}
+                            className="h-20 w-auto transition-transform group-hover:scale-105"
+                            priority
                         />
                     </Link>
 
                     {/* User Actions */}
                     <div className="flex items-center gap-4">
                         {/* User Email Display */}
-                        {userEmail && (
+                        {user && (
                             <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-light-grey rounded-lg">
                                 <User className="w-4 h-4 text-capital-blue" />
-                                <span className="text-sm text-dark-grey font-medium">{userEmail}</span>
+                                <span className="text-sm text-dark-grey font-medium">{user.email}</span>
                             </div>
                         )}
 

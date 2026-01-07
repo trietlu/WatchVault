@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Watch, Shield, TrendingUp, Clock, ChevronRight, CheckCircle } from 'lucide-react';
 
 export default function Home() {
@@ -9,10 +10,13 @@ export default function Home() {
             {/* Navigation */}
             <nav className="bg-white border-b border-medium-grey sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
-                    <img
+                    <Image
                         src="/logo.png"
                         alt="WatchVault"
-                        className="h-20"
+                        width={200}
+                        height={80}
+                        className="h-20 w-auto"
+                        priority
                     />
                     <div className="flex items-center gap-4">
                         <Link href="/login" className="btn-ghost">
