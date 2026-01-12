@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Watch, Shield, TrendingUp, Clock, ChevronRight, CheckCircle } from 'lucide-react';
+import { Watch, Shield, TrendingUp, Clock, ChevronRight, CheckCircle, Lock } from 'lucide-react';
 
 export default function Home() {
     return (
@@ -59,7 +59,7 @@ export default function Home() {
                         </div>
 
                         <div className="hidden md:block">
-                            <div className="card-premium p-8 bg-axels-beige border border-axels-grey">
+                            <div className="card-premium p-8 bg-axels-cream border border-axels-grey">
                                 <div className="space-y-6">
                                     <div className="flex items-start gap-4">
                                         <div className="w-12 h-12 rounded-lg bg-axels-black flex items-center justify-center flex-shrink-0">
@@ -96,23 +96,47 @@ export default function Home() {
             </section>
 
             {/* Stats Section */}
-            <section className="py-16 px-6 bg-light-grey">
+            <section className="py-8 px-6 bg-white">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-3 gap-8">
-                        <div className="card-premium text-center p-8">
-                            <div className="text-5xl font-bold text-axels-black mb-2">100%</div>
-                            <div className="text-dark-grey font-semibold">Tamper-Proof</div>
-                            <div className="text-sm text-text-grey mt-2">Blockchain security</div>
+                        <div className="card-premium text-center p-6">
+                            <div className="flex justify-center mb-6">
+                                <Image
+                                    src="/stats-lock.png"
+                                    alt="Security Lock"
+                                    width={80}
+                                    height={80}
+                                    className="object-contain"
+                                />
+                            </div>
+                            <div className="text-xl text-dark-grey font-semibold mb-2">100% Tamper-Proof</div>
+                            <div className="text-base text-text-grey">Blockchain security</div>
                         </div>
-                        <div className="card-premium text-center p-8">
-                            <div className="text-5xl font-bold text-axels-black mb-2">∞</div>
-                            <div className="text-dark-grey font-semibold">Permanent Records</div>
-                            <div className="text-sm text-text-grey mt-2">Never lost or deleted</div>
+                        <div className="card-premium text-center p-6">
+                            <div className="flex justify-center mb-6">
+                                <Image
+                                    src="/stats-infinity.png"
+                                    alt="Infinity Symbol"
+                                    width={80}
+                                    height={80}
+                                    className="object-contain"
+                                />
+                            </div>
+                            <div className="text-xl text-dark-grey font-semibold mb-2">Permanent Records</div>
+                            <div className="text-base text-text-grey">Never lost or deleted</div>
                         </div>
-                        <div className="card-premium text-center p-8">
-                            <div className="text-5xl font-bold text-axels-black mb-2">24/7</div>
-                            <div className="text-dark-grey font-semibold">Global Access</div>
-                            <div className="text-sm text-text-grey mt-2">Anytime, anywhere</div>
+                        <div className="card-premium text-center p-6">
+                            <div className="flex justify-center mb-6">
+                                <Image
+                                    src="/stats-globe.png"
+                                    alt="Global Access"
+                                    width={80}
+                                    height={80}
+                                    className="object-contain"
+                                />
+                            </div>
+                            <div className="text-xl text-dark-grey font-semibold mb-2">24/7 Global Access</div>
+                            <div className="text-base text-text-grey">Anytime, anywhere</div>
                         </div>
                     </div>
                 </div>
@@ -201,6 +225,34 @@ export default function Home() {
                                 Your data is encrypted and secure. Control who can view your collection
                                 with public and private passport options.
                             </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Luxury Collection Hero - Axels Style */}
+            <section className="py-20 px-6 bg-white">
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h2 className="text-4xl md:text-5xl font-serif mb-6">
+                                Preserve Your Legacy
+                            </h2>
+                            <p className="text-xl text-axels-grey-dark mb-8 leading-relaxed">
+                                Every timepiece tells a story. Document yours with blockchain-verified authenticity and comprehensive service records.
+                            </p>
+                            <Link href="/register" className="btn-primary">
+                                START YOUR COLLECTION
+                            </Link>
+                        </div>
+                        <div className="relative">
+                            <Image
+                                src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800&q=80"
+                                alt="Luxury Watch Collection"
+                                width={600}
+                                height={600}
+                                className="rounded-lg object-cover"
+                            />
                         </div>
                     </div>
                 </div>

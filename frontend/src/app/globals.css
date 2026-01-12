@@ -178,7 +178,7 @@ h6 {
   /* Card Styles */
   .card-premium {
     @apply rounded-xl p-6;
-    background: var(--white);
+    background: var(--axels-grey-light);
     border: 1px solid var(--medium-grey);
     box-shadow: var(--shadow-sm);
     transition: box-shadow 0.2s ease;
