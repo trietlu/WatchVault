@@ -1,9 +1,21 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+    subsets: ["latin"],
+    weight: ['300', '400', '500', '600'],
+    display: 'swap',
+    variable: '--font-inter',
+});
+
+const playfair = Playfair_Display({
+    subsets: ["latin"],
+    weight: ['400', '500', '600', '700'],
+    display: 'swap',
+    variable: '--font-playfair',
+});
 
 export const metadata: Metadata = {
     title: "WatchVault",
@@ -22,7 +34,7 @@ export default function RootLayout({
 
     return (
         <html lang="en">
-            <body className={inter.className}>
+            <body className={`${inter.variable} ${playfair.variable} ${inter.className}`}>
                 <GoogleOAuthProvider clientId={googleClientId}>
                     {children}
                 </GoogleOAuthProvider>

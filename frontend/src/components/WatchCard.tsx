@@ -16,7 +16,7 @@ export default function WatchCard({ id, brand, model, serialNumberHash }: WatchC
         >
             {/* Watch Image Placeholder */}
             <div className="relative h-48 rounded-lg overflow-hidden mb-4 bg-light-grey flex items-center justify-center border border-medium-grey">
-                <WatchIcon className="w-16 h-16 text-capital-blue opacity-30 group-hover:opacity-50 transition-opacity" />
+                <WatchIcon className="w-16 h-16 text-axels-black opacity-30 group-hover:opacity-50 transition-opacity" />
             </div>
 
             {/* Watch Info */}
@@ -35,7 +35,7 @@ export default function WatchCard({ id, brand, model, serialNumberHash }: WatchC
                 </div>
 
                 {/* View Details Link */}
-                <div className="flex items-center gap-2 text-capital-blue pt-2 group-hover:gap-3 transition-all">
+                <div className="flex items-center gap-2 text-axels-black pt-2 group-hover:gap-3 transition-all">
                     <span className="text-sm font-semibold">View Details</span>
                     <ArrowRight className="w-4 h-4" />
                 </div>

@@ -55,7 +55,7 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                 {/* Back Button */}
                 <Link
                     href={`/watches/${params.id}`}
-                    className="inline-flex items-center gap-2 text-text-grey hover:text-capital-blue transition-colors mb-8 font-medium"
+                    className="inline-flex items-center gap-2 text-text-grey hover:text-axels-black transition-colors mb-8 font-medium"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     <span>Back to Watch</span>
@@ -65,7 +65,7 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                 <div className="card-premium">
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-capital-blue/10 text-capital-blue mb-4">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-axels-black/10 text-axels-black mb-4">
                             <Sparkles className="w-4 h-4" />
                             <span className="text-sm font-semibold">Lifecycle Event</span>
                         </div>
@@ -91,12 +91,12 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                                         type="button"
                                         onClick={() => setEventType(option.value)}
                                         className={`p-4 rounded-lg border-2 transition-all ${eventType === option.value
-                                                ? 'border-capital-blue bg-capital-blue/10'
-                                                : 'border-medium-grey bg-white hover:border-capital-blue/50'
+                                                ? 'border-axels-black bg-axels-black/10'
+                                                : 'border-medium-grey bg-white hover:border-axels-black/50'
                                             }`}
                                     >
                                         <div className="text-2xl mb-2">{option.icon}</div>
-                                        <div className={`text-sm font-semibold ${eventType === option.value ? 'text-capital-blue' : 'text-dark-grey'
+                                        <div className={`text-sm font-semibold ${eventType === option.value ? 'text-axels-black' : 'text-dark-grey'
                                             }`}>
                                             {option.label}
                                         </div>
@@ -158,8 +158,8 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                         </div>
 
                         {/* Info Notice */}
-                        <div className="p-4 rounded-lg bg-capital-blue/10 border border-capital-blue/20">
-                            <p className="text-sm text-capital-blue flex items-start gap-2">
+                        <div className="p-4 rounded-lg bg-axels-black/10 border border-axels-black/20">
+                            <p className="text-sm text-axels-black flex items-start gap-2">
                                 <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                 <span>
                                     This event will be cryptographically hashed and can be optionally

@@ -8,7 +8,7 @@ export default function Home() {
     return (
         <div className="min-h-screen bg-light-grey">
             {/* Navigation */}
-            <nav className="bg-white border-b border-medium-grey sticky top-0 z-50">
+            <nav className="bg-axels-black border-b border-axels-black-light sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
                     <Image
                         src="/logo.png"
@@ -19,7 +19,7 @@ export default function Home() {
                         priority
                     />
                     <div className="flex items-center gap-4">
-                        <Link href="/login" className="btn-ghost">
+                        <Link href="/login" className="px-4 py-2 transition-colors duration-200 text-white hover:text-axels-black">
                             Sign In
                         </Link>
                         <Link href="/register" className="btn-primary">
@@ -34,8 +34,8 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-2 gap-12 items-center">
                         <div>
-                            <div className="inline-block px-4 py-2 bg-capital-blue/10 rounded-full mb-6">
-                                <span className="text-sm font-semibold text-capital-blue">Blockchain-Powered Authentication</span>
+                            <div className="inline-block px-4 py-2 bg-axels-black/10 rounded-full mb-6">
+                                <span className="text-sm font-semibold text-axels-black">Blockchain-Powered Authentication</span>
                             </div>
 
                             <h1 className="text-5xl md:text-6xl font-bold text-black mb-6 leading-tight">
@@ -59,33 +59,33 @@ export default function Home() {
                         </div>
 
                         <div className="hidden md:block">
-                            <div className="card-premium p-8 bg-gradient-to-br from-capital-blue to-capital-blue-dark text-white">
+                            <div className="card-premium p-8 bg-axels-beige border border-axels-grey">
                                 <div className="space-y-6">
                                     <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                                            <Shield className="w-6 h-6" />
+                                        <div className="w-12 h-12 rounded-lg bg-axels-black flex items-center justify-center flex-shrink-0">
+                                            <Shield className="w-6 h-6 text-white" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-xl mb-2 text-white">Immutable Records</h3>
-                                            <p className="text-white text-base">Blockchain-verified provenance that can never be altered</p>
+                                            <h3 className="font-bold text-xl mb-2 text-axels-black">Immutable Records</h3>
+                                            <p className="text-axels-grey-dark text-base">Blockchain-verified provenance that can never be altered</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                                            <Clock className="w-6 h-6" />
+                                        <div className="w-12 h-12 rounded-lg bg-axels-black flex items-center justify-center flex-shrink-0">
+                                            <Clock className="w-6 h-6 text-white" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-xl mb-2 text-white">Complete Timeline</h3>
-                                            <p className="text-white text-base">Track every service and authentication in one place</p>
+                                            <h3 className="font-bold text-xl mb-2 text-axels-black">Complete Timeline</h3>
+                                            <p className="text-axels-grey-dark text-base">Track every service and authentication in one place</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                                            <TrendingUp className="w-6 h-6" />
+                                        <div className="w-12 h-12 rounded-lg bg-axels-black flex items-center justify-center flex-shrink-0">
+                                            <TrendingUp className="w-6 h-6 text-white" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-xl mb-2 text-white">Preserve Value</h3>
-                                            <p className="text-white text-base">Documented history increases resale confidence</p>
+                                            <h3 className="font-bold text-xl mb-2 text-axels-black">Preserve Value</h3>
+                                            <p className="text-axels-grey-dark text-base">Documented history increases resale confidence</p>
                                         </div>
                                     </div>
                                 </div>
@@ -100,17 +100,17 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-3 gap-8">
                         <div className="card-premium text-center p-8">
-                            <div className="text-5xl font-bold text-capital-blue mb-2">100%</div>
+                            <div className="text-5xl font-bold text-axels-black mb-2">100%</div>
                             <div className="text-dark-grey font-semibold">Tamper-Proof</div>
                             <div className="text-sm text-text-grey mt-2">Blockchain security</div>
                         </div>
                         <div className="card-premium text-center p-8">
-                            <div className="text-5xl font-bold text-capital-blue mb-2">∞</div>
+                            <div className="text-5xl font-bold text-axels-black mb-2">∞</div>
                             <div className="text-dark-grey font-semibold">Permanent Records</div>
                             <div className="text-sm text-text-grey mt-2">Never lost or deleted</div>
                         </div>
                         <div className="card-premium text-center p-8">
-                            <div className="text-5xl font-bold text-capital-blue mb-2">24/7</div>
+                            <div className="text-5xl font-bold text-axels-black mb-2">24/7</div>
                             <div className="text-dark-grey font-semibold">Global Access</div>
                             <div className="text-sm text-text-grey mt-2">Anytime, anywhere</div>
                         </div>
@@ -133,8 +133,8 @@ export default function Home() {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {/* Feature 1 */}
                         <div className="card-premium hover-lift">
-                            <div className="w-14 h-14 rounded-lg bg-capital-blue/10 flex items-center justify-center mb-6">
-                                <Shield className="w-7 h-7 text-capital-blue" />
+                            <div className="w-14 h-14 rounded-lg bg-axels-black/10 flex items-center justify-center mb-6">
+                                <Shield className="w-7 h-7 text-axels-black" />
                             </div>
                             <h3 className="text-xl font-bold text-black mb-3">Blockchain Verification</h3>
                             <p className="text-text-grey leading-relaxed">
@@ -145,8 +145,8 @@ export default function Home() {
 
                         {/* Feature 2 */}
                         <div className="card-premium hover-lift">
-                            <div className="w-14 h-14 rounded-lg bg-capital-blue/10 flex items-center justify-center mb-6">
-                                <Clock className="w-7 h-7 text-capital-blue" />
+                            <div className="w-14 h-14 rounded-lg bg-axels-black/10 flex items-center justify-center mb-6">
+                                <Clock className="w-7 h-7 text-axels-black" />
                             </div>
                             <h3 className="text-xl font-bold text-black mb-3">Complete Timeline</h3>
                             <p className="text-text-grey leading-relaxed">
@@ -157,8 +157,8 @@ export default function Home() {
 
                         {/* Feature 3 */}
                         <div className="card-premium hover-lift">
-                            <div className="w-14 h-14 rounded-lg bg-capital-blue/10 flex items-center justify-center mb-6">
-                                <TrendingUp className="w-7 h-7 text-capital-blue" />
+                            <div className="w-14 h-14 rounded-lg bg-axels-black/10 flex items-center justify-center mb-6">
+                                <TrendingUp className="w-7 h-7 text-axels-black" />
                             </div>
                             <h3 className="text-xl font-bold text-black mb-3">Preserve Value</h3>
                             <p className="text-text-grey leading-relaxed">
@@ -169,8 +169,8 @@ export default function Home() {
 
                         {/* Feature 4 */}
                         <div className="card-premium hover-lift">
-                            <div className="w-14 h-14 rounded-lg bg-capital-blue/10 flex items-center justify-center mb-6">
-                                <CheckCircle className="w-7 h-7 text-capital-blue" />
+                            <div className="w-14 h-14 rounded-lg bg-axels-black/10 flex items-center justify-center mb-6">
+                                <CheckCircle className="w-7 h-7 text-axels-black" />
                             </div>
                             <h3 className="text-xl font-bold text-black mb-3">Easy Authentication</h3>
                             <p className="text-text-grey leading-relaxed">
@@ -181,8 +181,8 @@ export default function Home() {
 
                         {/* Feature 5 */}
                         <div className="card-premium hover-lift">
-                            <div className="w-14 h-14 rounded-lg bg-capital-blue/10 flex items-center justify-center mb-6">
-                                <Watch className="w-7 h-7 text-capital-blue" />
+                            <div className="w-14 h-14 rounded-lg bg-axels-black/10 flex items-center justify-center mb-6">
+                                <Watch className="w-7 h-7 text-axels-black" />
                             </div>
                             <h3 className="text-xl font-bold text-black mb-3">Service History</h3>
                             <p className="text-text-grey leading-relaxed">
@@ -193,8 +193,8 @@ export default function Home() {
 
                         {/* Feature 6 */}
                         <div className="card-premium hover-lift">
-                            <div className="w-14 h-14 rounded-lg bg-capital-blue/10 flex items-center justify-center mb-6">
-                                <Shield className="w-7 h-7 text-capital-blue" />
+                            <div className="w-14 h-14 rounded-lg bg-axels-black/10 flex items-center justify-center mb-6">
+                                <Shield className="w-7 h-7 text-axels-black" />
                             </div>
                             <h3 className="text-xl font-bold text-black mb-3">Secure & Private</h3>
                             <p className="text-text-grey leading-relaxed">
@@ -207,15 +207,15 @@ export default function Home() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 px-6 bg-capital-blue">
+            <section className="py-20 px-6 bg-axels-black">
                 <div className="max-w-4xl mx-auto text-center">
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
                         Begin Your Legacy Today
                     </h2>
-                    <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+                    <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
                         Join collectors worldwide who trust WatchVault to preserve their timepiece heritage.
                     </p>
-                    <Link href="/register" className="inline-flex items-center px-8 py-4 bg-white text-capital-blue font-semibold rounded-lg hover:bg-light-grey transition-all shadow-lg">
+                    <Link href="/register" className="inline-flex items-center px-8 py-4 bg-axels-black text-white font-semibold rounded-lg hover:bg-axels-black-dark transition-all shadow-lg">
                         Create Your Vault
                         <ChevronRight className="ml-2 w-5 h-5" />
                     </Link>

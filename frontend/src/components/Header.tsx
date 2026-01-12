@@ -19,7 +19,7 @@ export default function Header() {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <header className="bg-white border-b border-medium-grey sticky top-0 z-50">
+        <header className="bg-axels-black border-b border-axels-black-light sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-6 py-2">
                 <div className="flex items-center justify-between">
                     {/* Logo */}
@@ -38,15 +38,15 @@ export default function Header() {
                     <div className="flex items-center gap-4">
                         {/* User Email Display */}
                         {user && (
-                            <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-light-grey rounded-lg">
-                                <User className="w-4 h-4 text-capital-blue" />
-                                <span className="text-sm text-dark-grey font-medium">{user.email}</span>
+                            <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-axels-black-light rounded-lg">
+                                <User className="w-4 h-4 text-axels-black" />
+                                <span className="text-sm text-white font-medium">{user.email}</span>
                             </div>
                         )}
 
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-dark-grey hover:bg-light-grey transition-all font-medium"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:bg-axels-black-light transition-all font-medium"
                         >
                             <LogOut className="w-4 h-4" />
                             <span className="hidden md:inline">Logout</span>

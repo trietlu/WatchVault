@@ -85,7 +85,7 @@ export default function NewWatchPage() {
                 {/* Back Button */}
                 <Link
                     href="/dashboard"
-                    className="inline-flex items-center gap-2 text-text-grey hover:text-capital-blue transition-colors mb-8 font-medium"
+                    className="inline-flex items-center gap-2 text-text-grey hover:text-axels-black transition-colors mb-8 font-medium"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     <span>Back to Dashboard</span>
@@ -95,7 +95,7 @@ export default function NewWatchPage() {
                 <div className="card-premium">
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-capital-blue/10 text-capital-blue mb-4">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-axels-black/10 text-axels-black mb-4">
                             <Sparkles className="w-4 h-4" />
                             <span className="text-sm font-semibold">Digital Passport</span>
                         </div>
@@ -109,8 +109,8 @@ export default function NewWatchPage() {
 
                     {/* Error Message */}
                     {error && (
-                        <div className="mb-6 p-4 rounded-lg bg-capital-red/10 border border-capital-red/20">
-                            <p className="text-capital-red text-sm">{error}</p>
+                        <div className="mb-6 p-4 rounded-lg bg-axels-black/10 border border-axels-black/20">
+                            <p className="text-axels-black text-sm">{error}</p>
                         </div>
                     )}
 
@@ -123,7 +123,7 @@ export default function NewWatchPage() {
                             </label>
                             {!imagePreview ? (
                                 <label className="block cursor-pointer">
-                                    <div className="border-2 border-dashed border-medium-grey rounded-lg p-8 text-center hover:border-capital-blue hover:bg-capital-blue/5 transition-all">
+                                    <div className="border-2 border-dashed border-medium-grey rounded-lg p-8 text-center hover:border-axels-black hover:bg-axels-black/5 transition-all">
                                         <Upload className="w-12 h-12 text-text-grey mx-auto mb-3" />
                                         <p className="text-dark-grey font-medium mb-1">Click to upload image</p>
                                         <p className="text-sm text-text-grey">JPEG, PNG, or WebP (max 8MB)</p>
@@ -145,7 +145,7 @@ export default function NewWatchPage() {
                                     <button
                                         type="button"
                                         onClick={removeImage}
-                                        className="absolute top-2 right-2 p-2 bg-capital-red text-white rounded-full hover:bg-capital-red/90 transition-colors"
+                                        className="absolute top-2 right-2 p-2 bg-axels-black text-white rounded-full hover:bg-axels-black/90 transition-colors"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -199,8 +199,8 @@ export default function NewWatchPage() {
                                 value={serialNumber}
                                 onChange={(e) => setSerialNumber(e.target.value)}
                             />
-                            <div className="mt-3 p-4 rounded-lg bg-capital-blue/10 border border-capital-blue/20">
-                                <p className="text-sm text-capital-blue flex items-start gap-2">
+                            <div className="mt-3 p-4 rounded-lg bg-axels-black/10 border border-axels-black/20">
+                                <p className="text-sm text-axels-black flex items-start gap-2">
                                     <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                     <span>
                                         Your serial number will be cryptographically hashed before storage.

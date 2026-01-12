@@ -152,7 +152,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                 {/* Back Button */}
                 <Link
                     href="/dashboard"
-                    className="inline-flex items-center gap-2 text-text-grey hover:text-capital-blue transition-colors mb-8 font-medium"
+                    className="inline-flex items-center gap-2 text-text-grey hover:text-axels-black transition-colors mb-8 font-medium"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     <span>Back to Dashboard</span>
@@ -174,7 +174,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                                         />
                                         <button
                                             onClick={() => handleImageDelete(watch.files[0].id)}
-                                            className="absolute top-2 right-2 p-2 bg-capital-red text-white rounded-full hover:bg-capital-red/90 transition-colors shadow-lg"
+                                            className="absolute top-2 right-2 p-2 bg-axels-black text-white rounded-full hover:bg-axels-black/90 transition-colors shadow-lg"
                                             title="Delete image"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -182,11 +182,11 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                                     </>
                                 ) : (
                                     <>
-                                        <WatchIcon className="w-24 h-24 text-capital-blue opacity-30" />
+                                        <WatchIcon className="w-24 h-24 text-axels-black opacity-30" />
                                         <label className="absolute inset-0 flex items-center justify-center cursor-pointer hover:bg-black/5 transition-colors">
                                             <div className="text-center">
-                                                <Upload className="w-8 h-8 text-capital-blue mx-auto mb-2" />
-                                                <p className="text-sm text-capital-blue font-medium">Upload Image</p>
+                                                <Upload className="w-8 h-8 text-axels-black mx-auto mb-2" />
+                                                <p className="text-sm text-axels-black font-medium">Upload Image</p>
                                             </div>
                                             <input
                                                 type="file"
@@ -234,7 +234,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
 
                         {/* QR Code Card */}
                         <div className="card-blue text-center">
-                            <h3 className="text-lg font-bold text-capital-blue mb-4">
+                            <h3 className="text-lg font-bold text-axels-black mb-4">
                                 Digital Passport QR
                             </h3>
                             <div className="inline-block p-4 bg-white rounded-xl">
@@ -243,7 +243,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                             <Link
                                 href={`/p/${watch.publicId}`}
                                 target="_blank"
-                                className="inline-flex items-center gap-2 mt-4 text-sm text-capital-blue hover:text-capital-blue-dark transition-colors font-medium"
+                                className="inline-flex items-center gap-2 mt-4 text-sm text-axels-black hover:text-axels-black-dark transition-colors font-medium"
                             >
                                 <span>View Public Passport</span>
                                 <ExternalLink className="w-4 h-4" />
@@ -275,19 +275,19 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                             {/* Timeline */}
                             {watch.events.length === 0 ? (
                                 <div className="text-center py-12">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-capital-blue/10 mb-4">
-                                        <Clock className="w-8 h-8 text-capital-blue" />
+                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-axels-black/10 mb-4">
+                                        <Clock className="w-8 h-8 text-axels-black" />
                                     </div>
                                     <p className="text-text-grey">No events recorded yet</p>
                                 </div>
                             ) : (
-                                <div className="relative border-l-2 border-capital-blue ml-4 space-y-8">
+                                <div className="relative border-l-2 border-axels-black ml-4 space-y-8">
                                     {watch.events.map((event, index) => {
                                         const payload = JSON.parse(event.payloadJson);
                                         return (
                                             <div key={event.id} className="relative ml-8">
                                                 {/* Timeline Dot */}
-                                                <div className="absolute -left-[37px] flex items-center justify-center w-8 h-8 rounded-full bg-capital-blue border-4 border-white shadow-md">
+                                                <div className="absolute -left-[37px] flex items-center justify-center w-8 h-8 rounded-full bg-axels-black border-4 border-white shadow-md">
                                                     <div className="text-white">
                                                         {eventIcons[event.eventType] || <FileText className="w-4 h-4" />}
                                                     </div>

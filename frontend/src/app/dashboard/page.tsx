@@ -68,7 +68,7 @@ export default function DashboardPage() {
                         {/* Total Watches */}
                         <div className="card-premium">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-lg bg-capital-blue flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-lg bg-axels-black flex items-center justify-center">
                                     <Watch className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
                         {/* Collection Value */}
                         <div className="card-premium">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-lg bg-capital-blue flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-lg bg-axels-black flex items-center justify-center">
                                     <TrendingUp className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
@@ -98,7 +98,7 @@ export default function DashboardPage() {
                         {/* Latest Addition */}
                         <div className="card-premium">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-lg bg-capital-blue flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-lg bg-axels-black flex items-center justify-center">
                                     <Clock className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                 {/* Empty State */}
                 {!loading && watches.length === 0 && (
                     <EmptyState
-                        icon={<Watch className="w-10 h-10 text-capital-blue" />}
+                        icon={<Watch className="w-10 h-10 text-axels-black" />}
                         title="No Watches Yet"
                         description="Start building your collection by minting your first digital passport"
                         actionLabel="Add Your First Watch"
