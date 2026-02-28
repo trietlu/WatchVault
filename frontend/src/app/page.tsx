@@ -95,52 +95,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Stats Section */}
-            <section className="py-8 px-6 bg-white">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <div className="card-premium text-center p-6">
-                            <div className="flex justify-center mb-6">
-                                <Image
-                                    src="/stats-lock.png"
-                                    alt="Security Lock"
-                                    width={80}
-                                    height={80}
-                                    className="object-contain"
-                                />
-                            </div>
-                            <div className="text-xl text-dark-grey font-semibold mb-2">100% Tamper-Proof</div>
-                            <div className="text-base text-text-grey">Blockchain security</div>
-                        </div>
-                        <div className="card-premium text-center p-6">
-                            <div className="flex justify-center mb-6">
-                                <Image
-                                    src="/stats-infinity.png"
-                                    alt="Infinity Symbol"
-                                    width={80}
-                                    height={80}
-                                    className="object-contain"
-                                />
-                            </div>
-                            <div className="text-xl text-dark-grey font-semibold mb-2">Permanent Records</div>
-                            <div className="text-base text-text-grey">Never lost or deleted</div>
-                        </div>
-                        <div className="card-premium text-center p-6">
-                            <div className="flex justify-center mb-6">
-                                <Image
-                                    src="/stats-globe.png"
-                                    alt="Global Access"
-                                    width={80}
-                                    height={80}
-                                    className="object-contain"
-                                />
-                            </div>
-                            <div className="text-xl text-dark-grey font-semibold mb-2">24/7 Global Access</div>
-                            <div className="text-base text-text-grey">Anytime, anywhere</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
             {/* Features Section */}
             <section className="py-20 px-6 bg-white">
