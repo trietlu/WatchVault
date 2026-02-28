@@ -2,8 +2,8 @@ import axios from 'axios';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../dist/config/contract.js';
 
-const API_URL = 'http://localhost:3001';
-const PROVIDER_URL = 'http://127.0.0.1:8545';
+const API_URL = process.env.API_URL || process.env.API_BASE_URL || 'http://localhost:3001';
+const PROVIDER_URL = process.env.PROVIDER_URL || process.env.CHAIN_RPC_URL || 'http://127.0.0.1:8545';
 
 async function main() {
     try {
@@ -51,7 +51,8 @@ async function main() {
         // 4. Verify on Blockchain
         console.log('Verifying on blockchain...');
         const provider = new ethers.JsonRpcProvider(PROVIDER_URL);
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        const contractAddress = process.env.CHAIN_CONTRACT_ADDRESS || CONTRACT_ADDRESS;
+        const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, provider);
 
         // Listen for events (or just check past events)
         // Since we just sent it, we can query the transaction receipt or logs

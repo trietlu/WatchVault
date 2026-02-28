@@ -11,6 +11,7 @@ interface WatchEvent {
     eventType: string;
     payloadJson: string;
     payloadHash: string;
+    blockNumber?: number | null;
     txHash?: string;
     timestamp: string;
 }
@@ -21,9 +22,10 @@ interface Watch {
     model: string;
     serialNumberHash: string;
     publicId: string;
-    qrCodeUrl: string;
-    events: WatchEvent[];
-    files: FileRecord[];
+    qrCodeUrl?: string | null;
+    createdAt?: string;
+    events?: WatchEvent[];
+    files?: FileRecord[];
 }
 
 interface WatchState {

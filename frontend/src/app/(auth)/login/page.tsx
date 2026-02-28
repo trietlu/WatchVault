@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/api';
-import { Watch, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
 import FacebookLoginButton from '@/components/FacebookLoginButton';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -27,8 +28,8 @@ export default function LoginPage() {
             const res = await api.post('/auth/login', { email, password });
             login(res.data.token, res.data.user);
             router.push('/dashboard');
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Invalid credentials. Please try again.');
+        } catch (error: unknown) {
+            setError(getErrorMessage(error, 'Invalid credentials. Please try again.'));
         } finally {
             setLoading(false);
         }

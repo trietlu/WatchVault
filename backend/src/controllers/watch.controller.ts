@@ -5,6 +5,8 @@ import { getContract } from '../config/contract.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { env } from '../config/env.js';
+import { buildAbsoluteUrl } from '../lib/url.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,13 +16,25 @@ const hashSerial = (serial: string) => {
     return createHash('sha256').update(serial).digest('hex');
 };
 
+const eventTypeMap: Record<string, number> = {
+    MINT: 0,
+    SERVICE: 1,
+    TRANSFER: 2,
+    AUTH: 3,
+    NOTE: 4,
+};
+
+const getAuthenticatedUserId = (req: Request): number | undefined => req.user?.userId;
+
 export const createWatch = async (req: Request, res: Response) => {
     try {
         const { brand, model, serialNumber } = req.body;
-        // @ts-ignore - userId is added by auth middleware
-        const userId = req.user?.userId;
-        // @ts-ignore - file is added by multer
+        const userId = getAuthenticatedUserId(req);
         const file = req.file;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
 
         if (!brand || !model || !serialNumber) {
             return res.status(400).json({ error: 'Missing required fields' });
@@ -58,8 +72,8 @@ export const createWatch = async (req: Request, res: Response) => {
         }
 
         // Generate QR Code URL (mock for now, or just the public URL)
-        const qrCodeUrl = `https://watchvault.com/p/${watch.publicId}`;
-        await prisma.watch.update({
+        const qrCodeUrl = buildAbsoluteUrl(env.appBaseUrl, `/p/${watch.publicId}`);
+        const updatedWatch = await prisma.watch.update({
             where: { id: watch.id },
             data: { qrCodeUrl },
         });
@@ -78,7 +92,7 @@ export const createWatch = async (req: Request, res: Response) => {
             },
         });
 
-        res.status(201).json({ watch, qrCodeUrl });
+        res.status(201).json({ watch: updatedWatch, qrCodeUrl });
     } catch (error) {
         console.error('Create watch error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -87,8 +101,11 @@ export const createWatch = async (req: Request, res: Response) => {
 
 export const getWatches = async (req: Request, res: Response) => {
     try {
-        // @ts-ignore
-        const userId = req.user?.userId;
+        const userId = getAuthenticatedUserId(req);
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
         const watches = await prisma.watch.findMany({
             where: { ownerId: userId },
             include: { events: true },
@@ -103,8 +120,14 @@ export const getWatches = async (req: Request, res: Response) => {
 export const getWatchDetail = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const watch = await prisma.watch.findUnique({
-            where: { id: Number(id) },
+        const userId = getAuthenticatedUserId(req);
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const watch = await prisma.watch.findFirst({
+            where: { id: Number(id), ownerId: userId },
             include: { events: { include: { files: true } }, files: true },
         });
 
@@ -122,15 +145,19 @@ export const getWatchDetail = async (req: Request, res: Response) => {
 export const uploadWatchImage = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        // @ts-ignore - file is added by multer
+        const userId = getAuthenticatedUserId(req);
         const file = req.file;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
 
         if (!file) {
             return res.status(400).json({ error: 'No image file provided' });
         }
 
-        const watch = await prisma.watch.findUnique({
-            where: { id: Number(id) },
+        const watch = await prisma.watch.findFirst({
+            where: { id: Number(id), ownerId: userId },
             include: { files: true },
         });
 
@@ -162,6 +189,20 @@ export const uploadWatchImage = async (req: Request, res: Response) => {
 export const deleteWatchImage = async (req: Request, res: Response) => {
     try {
         const { id, fileId } = req.params;
+        const userId = getAuthenticatedUserId(req);
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const watch = await prisma.watch.findFirst({
+            where: { id: Number(id), ownerId: userId },
+            select: { id: true },
+        });
+
+        if (!watch) {
+            return res.status(404).json({ error: 'Watch not found' });
+        }
 
         const fileRecord = await prisma.fileRecord.findUnique({
             where: { id: Number(fileId) },
@@ -172,7 +213,10 @@ export const deleteWatchImage = async (req: Request, res: Response) => {
         }
 
         // Delete file from filesystem
-        const filePath = path.join(__dirname, '..', fileRecord.url);
+        const relativeFilePath = fileRecord.url.startsWith('/')
+            ? fileRecord.url.slice(1)
+            : fileRecord.url;
+        const filePath = path.join(__dirname, '..', '..', relativeFilePath);
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
@@ -193,9 +237,23 @@ export const addEvent = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const { eventType, payload } = req.body;
+        const userId = getAuthenticatedUserId(req);
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
 
         if (!eventType || !payload) {
             return res.status(400).json({ error: 'Missing event type or payload' });
+        }
+
+        const watch = await prisma.watch.findFirst({
+            where: { id: Number(id), ownerId: userId },
+            select: { id: true, serialNumberHash: true },
+        });
+
+        if (!watch) {
+            return res.status(404).json({ error: 'Watch not found' });
         }
 
         const payloadJson = JSON.stringify(payload);
@@ -204,7 +262,7 @@ export const addEvent = async (req: Request, res: Response) => {
         // 1. Create event in DB first (pending state)
         const event = await prisma.watchEvent.create({
             data: {
-                watchId: Number(id),
+                watchId: watch.id,
                 eventType,
                 payloadJson,
                 payloadHash,
@@ -213,23 +271,12 @@ export const addEvent = async (req: Request, res: Response) => {
 
         // 2. Anchor to blockchain
         try {
-            const watch = await prisma.watch.findUnique({ where: { id: Number(id) } });
-            if (!watch) throw new Error('Watch not found');
+            if (!env.blockchainEnabled) {
+                return res.status(201).json(event);
+            }
 
             const contract = getContract() as any;
-
-            // Map eventType string to uint8 (MINT=0, SERVICE=1, TRANSFER=2, AUTH=3, NOTE=4)
-            // This mapping should be consistent with the contract or shared constants
-            // For MVP, let's assume a simple mapping or just pass 1 for now if contract logic isn't strict
-            // Actually, let's define a mapping:
-            const eventTypeMap: Record<string, number> = {
-                'MINT': 0,
-                'SERVICE': 1,
-                'TRANSFER': 2,
-                'AUTH': 3,
-                'NOTE': 4
-            };
-            const eventTypeId = eventTypeMap[eventType] ?? 4; // Default to NOTE
+            const eventTypeId = eventTypeMap[eventType] ?? eventTypeMap.NOTE;
 
             const tx = await contract.recordEvent(
                 '0x' + watch.serialNumberHash,

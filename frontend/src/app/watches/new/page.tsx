@@ -6,6 +6,8 @@ import api from '@/lib/api';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { ArrowLeft, Watch, Sparkles, Upload, X } from 'lucide-react';
+import { useWatchStore } from '@/stores/useWatchStore';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function NewWatchPage() {
     const [brand, setBrand] = useState('');
@@ -16,6 +18,7 @@ export default function NewWatchPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
+    const addWatch = useWatchStore((state) => state.addWatch);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -63,15 +66,20 @@ export default function NewWatchPage() {
                 formData.append('image', image);
             }
 
-            await api.post('/watches', formData, {
+            const res = await api.post('/watches', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
+            addWatch({
+                ...res.data.watch,
+                events: [],
+                files: [],
+            });
             router.push('/dashboard');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to create watch', error);
-            setError(error.response?.data?.error || 'Failed to create watch');
+            setError(getErrorMessage(error, 'Failed to create watch'));
         } finally {
             setLoading(false);
         }

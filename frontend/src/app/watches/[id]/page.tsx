@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Link from 'next/link';
 import QRCode from 'react-qr-code';
 import Header from '@/components/Header';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ArrowLeft, Plus, CheckCircle, Clock, Shield, FileText, ExternalLink, Watch as WatchIcon, Upload, Trash2 } from 'lucide-react';
+import { buildPublicPassportUrl, getApiAssetUrl } from '@/lib/config';
+import { useWatchStore } from '@/stores/useWatchStore';
+import { getErrorMessage } from '@/lib/errors';
 
 interface Event {
     id: number;
@@ -43,16 +45,22 @@ const eventIcons: Record<string, React.ReactNode> = {
 };
 
 export default function WatchDetailPage({ params }: { params: { id: string } }) {
-    const [watch, setWatch] = useState<Watch | null>(null);
+    const selectedWatch = useWatchStore((state) => state.selectedWatch);
+    const setSelectedWatch = useWatchStore((state) => state.setSelectedWatch);
+    const updateWatch = useWatchStore((state) => state.updateWatch);
+    const [watch, setWatch] = useState<Watch | null>(
+        selectedWatch?.id === Number(params.id) ? selectedWatch as Watch : null
+    );
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
-    const router = useRouter();
 
     useEffect(() => {
         const fetchWatch = async () => {
             try {
                 const res = await api.get(`/watches/${params.id}`);
                 setWatch(res.data);
+                setSelectedWatch(res.data);
+                updateWatch(res.data.id, res.data);
             } catch (error) {
                 console.error('Failed to fetch watch', error);
             } finally {
@@ -61,7 +69,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
         };
 
         fetchWatch();
-    }, [params.id]);
+    }, [params.id, setSelectedWatch, updateWatch]);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -93,9 +101,11 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
             // Refresh watch data
             const res = await api.get(`/watches/${params.id}`);
             setWatch(res.data);
-        } catch (error: any) {
+            setSelectedWatch(res.data);
+            updateWatch(res.data.id, res.data);
+        } catch (error: unknown) {
             console.error('Failed to upload image', error);
-            alert(error.response?.data?.error || 'Failed to upload image');
+            alert(getErrorMessage(error, 'Failed to upload image'));
         } finally {
             setUploading(false);
         }
@@ -110,6 +120,8 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
             // Refresh watch data
             const res = await api.get(`/watches/${params.id}`);
             setWatch(res.data);
+            setSelectedWatch(res.data);
+            updateWatch(res.data.id, res.data);
         } catch (error) {
             console.error('Failed to delete image', error);
             alert('Failed to delete image');
@@ -142,7 +154,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
         );
     }
 
-    const publicUrl = `http://localhost:3000/p/${watch.publicId}`;
+    const publicUrl = buildPublicPassportUrl(watch.publicId);
 
     return (
         <div className="min-h-screen bg-light-grey">
@@ -168,7 +180,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                                 {watch.files && watch.files.length > 0 ? (
                                     <>
                                         <img
-                                            src={`http://localhost:3001${watch.files[0].url}`}
+                                            src={getApiAssetUrl(watch.files[0].url)}
                                             alt={`${watch.brand} ${watch.model}`}
                                             className="w-full h-full object-cover"
                                         />
@@ -282,7 +294,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                                 </div>
                             ) : (
                                 <div className="relative border-l-2 border-axels-black ml-4 space-y-8">
-                                    {watch.events.map((event, index) => {
+                                    {watch.events.map((event) => {
                                         const payload = JSON.parse(event.payloadJson);
                                         return (
                                             <div key={event.id} className="relative ml-8">

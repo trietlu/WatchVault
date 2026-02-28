@@ -345,12 +345,22 @@ Currently, the application uses manual testing. To test:
 ### Backend (.env)
 ```
 PORT=3001
-JWT_SECRET=your_jwt_secret
 DATABASE_URL="file:./dev.db"
+JWT_SECRET=replace-with-a-long-random-secret
+API_BASE_URL="http://localhost:3001"
+APP_BASE_URL="http://localhost:3000"
+UPLOADS_DIR="uploads"
+BLOCKCHAIN_ENABLED="false"
+# Optional when BLOCKCHAIN_ENABLED=true
+CHAIN_RPC_URL="http://127.0.0.1:8545"
+CHAIN_PRIVATE_KEY=""
+CHAIN_CONTRACT_ADDRESS=""
 ```
 
 ### Frontend (.env.local)
 ```
+NEXT_PUBLIC_API_BASE_URL="http://localhost:3001"
+NEXT_PUBLIC_APP_BASE_URL="http://localhost:3000"
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
 NEXT_PUBLIC_FACEBOOK_APP_ID=your_facebook_app_id
 ```
@@ -384,5 +394,4 @@ NEXT_PUBLIC_FACEBOOK_APP_ID=your_facebook_app_id
 3. Commit changes: `git commit -m 'Add amazing feature'`
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
-
 

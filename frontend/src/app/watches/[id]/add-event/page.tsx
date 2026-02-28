@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { ArrowLeft, Calendar, MapPin, FileText, Sparkles } from 'lucide-react';
+import { useWatchStore } from '@/stores/useWatchStore';
 
 const eventTypeOptions = [
     { value: 'SERVICE', label: 'Service / Repair', icon: '🔧' },
@@ -21,6 +22,8 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
     const [date, setDate] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const selectedWatch = useWatchStore((state) => state.selectedWatch);
+    const setSelectedWatch = useWatchStore((state) => state.setSelectedWatch);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,10 +37,17 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
         };
 
         try {
-            await api.post(`/watches/${params.id}/events`, {
+            const res = await api.post(`/watches/${params.id}/events`, {
                 eventType,
                 payload,
             });
+
+            if (selectedWatch?.id === Number(params.id)) {
+                setSelectedWatch({
+                    ...selectedWatch,
+                    events: [...(selectedWatch.events ?? []), res.data],
+                });
+            }
             router.push(`/watches/${params.id}`);
         } catch (error) {
             console.error('Failed to add event', error);
@@ -73,7 +83,7 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                             Record Event
                         </h1>
                         <p className="text-text-grey text-lg">
-                            Add a new event to your watch's history timeline
+                            Add a new event to your watch&apos;s history timeline
                         </p>
                     </div>
 

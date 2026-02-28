@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
 import Header from '@/components/Header';
@@ -8,22 +8,17 @@ import WatchCard from '@/components/WatchCard';
 import EmptyState from '@/components/EmptyState';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Plus, Watch, TrendingUp, Clock } from 'lucide-react';
-
-interface Watch {
-    id: number;
-    brand: string;
-    model: string;
-    serialNumberHash: string;
-    qrCodeUrl: string;
-    createdAt: string;
-}
+import { useWatchStore } from '@/stores/useWatchStore';
 
 export default function DashboardPage() {
-    const [watches, setWatches] = useState<Watch[]>([]);
-    const [loading, setLoading] = useState(true);
+    const watches = useWatchStore((state) => state.watches);
+    const loading = useWatchStore((state) => state.loading);
+    const setWatches = useWatchStore((state) => state.setWatches);
+    const setLoading = useWatchStore((state) => state.setLoading);
 
     useEffect(() => {
         const fetchWatches = async () => {
+            setLoading(true);
             try {
                 const res = await api.get('/watches');
                 setWatches(res.data);
@@ -35,7 +30,7 @@ export default function DashboardPage() {
         };
 
         fetchWatches();
-    }, []);
+    }, [setLoading, setWatches]);
 
     return (
         <div className="min-h-screen bg-light-grey">

@@ -2,21 +2,18 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { LogOut, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 export default function Header() {
     const router = useRouter();
-    const pathname = usePathname();
     const { user, logout } = useAuthStore();
 
     const handleLogout = () => {
         logout();
         router.push('/');
     };
-
-    const isActive = (path: string) => pathname === path;
 
     return (
         <header className="bg-axels-black border-b border-axels-black-light sticky top-0 z-50">

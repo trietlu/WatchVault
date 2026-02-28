@@ -2,9 +2,7 @@ import type { Request, Response } from 'express';
 import prisma from '../prisma.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { OAuth2Client } from 'google-auth-library';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
+import { env } from '../config/env.js';
 
 export const register = async (req: Request, res: Response) => {
     try {
@@ -24,7 +22,7 @@ export const register = async (req: Request, res: Response) => {
             data: { email, passwordHash },
         });
 
-        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1d' });
+        const token = jwt.sign({ userId: user.id }, env.jwtSecret, { expiresIn: '1d' });
         res.status(201).json({ token, user: { id: user.id, email: user.email } });
     } catch (error) {
         console.error('Register error:', error);
@@ -54,7 +52,7 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1d' });
+        const token = jwt.sign({ userId: user.id }, env.jwtSecret, { expiresIn: '1d' });
         res.status(200).json({ token, user: { id: user.id, email: user.email } });
     } catch (error) {
         console.error('Login error:', error);
@@ -96,7 +94,7 @@ export const googleLogin = async (req: Request, res: Response) => {
             });
         }
 
-        const jwtToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1d' });
+        const jwtToken = jwt.sign({ userId: user.id }, env.jwtSecret, { expiresIn: '1d' });
         res.status(200).json({ token: jwtToken, user: { id: user.id, email: user.email } });
     } catch (error) {
         console.error('Google login error:', error);
@@ -138,7 +136,7 @@ export const facebookLogin = async (req: Request, res: Response) => {
             });
         }
 
-        const jwtToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1d' });
+        const jwtToken = jwt.sign({ userId: user.id }, env.jwtSecret, { expiresIn: '1d' });
         res.status(200).json({ token: jwtToken, user: { id: user.id, email: user.email } });
     } catch (error) {
         console.error('Facebook login error:', error);

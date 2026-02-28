@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
-import { CheckCircle, Clock, Shield, FileText } from 'lucide-react';
+import { CheckCircle, Clock, Shield, FileText, Hash } from 'lucide-react';
 
 interface Event {
     eventType: string;
     payloadHash: string;
     txHash?: string;
     timestamp: string;
-    payloadJson?: string;
+    blockNumber?: number | null;
 }
 
 interface Watch {
@@ -83,11 +83,6 @@ export default function PublicPassportPage({ params }: { params: { publicId: str
 
                     <div className="relative border-l-2 border-gray-200 dark:border-zinc-700 ml-4 space-y-8 pb-8">
                         {watch.events.map((event, index) => {
-                            let payload = {};
-                            try {
-                                if (event.payloadJson) payload = JSON.parse(event.payloadJson);
-                            } catch (e) { }
-
                             return (
                                 <div key={index} className="ml-8 relative">
                                     <span className="absolute -left-[41px] flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-black border-2 border-gray-200 dark:border-zinc-700">
@@ -114,16 +109,27 @@ export default function PublicPassportPage({ params }: { params: { publicId: str
                                             {new Date(event.timestamp).toLocaleDateString()}
                                         </time>
 
-                                        {Object.keys(payload).length > 0 && (
-                                            <div className="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-zinc-800/50 p-3 rounded border border-gray-100 dark:border-zinc-700/50">
-                                                {Object.entries(payload).map(([key, value]) => (
-                                                    <div key={key} className="grid grid-cols-3 gap-2 mb-1 last:mb-0">
-                                                        <span className="font-medium capitalize opacity-70">{key}:</span>
-                                                        <span className="col-span-2">{String(value)}</span>
-                                                    </div>
-                                                ))}
+                                        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-zinc-800/50 p-3 rounded border border-gray-100 dark:border-zinc-700/50">
+                                            <div className="flex items-start gap-2">
+                                                <Hash size={14} className="mt-0.5 shrink-0 text-blue-600" />
+                                                <div>
+                                                    <div className="font-medium opacity-70">Payload Hash</div>
+                                                    <div className="font-mono break-all">{event.payloadHash}</div>
+                                                </div>
                                             </div>
-                                        )}
+                                            {event.txHash && (
+                                                <div>
+                                                    <div className="font-medium opacity-70">Transaction</div>
+                                                    <div className="font-mono break-all">{event.txHash}</div>
+                                                </div>
+                                            )}
+                                            {typeof event.blockNumber === 'number' && (
+                                                <div>
+                                                    <div className="font-medium opacity-70">Block</div>
+                                                    <div>{event.blockNumber}</div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             );

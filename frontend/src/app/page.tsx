@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Watch, Shield, TrendingUp, Clock, ChevronRight, CheckCircle, Lock } from 'lucide-react';
+import { Watch, Shield, TrendingUp, Clock, ChevronRight, CheckCircle } from 'lucide-react';
 
 export default function Home() {
     return (
@@ -117,7 +117,7 @@ export default function Home() {
                             <h3 className="text-xl font-bold text-black mb-3">Blockchain Verification</h3>
                             <p className="text-text-grey leading-relaxed">
                                 Every transaction and service record is cryptographically secured on the Ethereum blockchain,
-                                ensuring your watch's history is permanent and verifiable.
+                                ensuring your watch&apos;s history is permanent and verifiable.
                             </p>
                         </div>
 
@@ -128,7 +128,7 @@ export default function Home() {
                             </div>
                             <h3 className="text-xl font-bold text-black mb-3">Complete Timeline</h3>
                             <p className="text-text-grey leading-relaxed">
-                                Track every moment in your timepiece's journey. Service records, ownership transfers,
+                                Track every moment in your timepiece&apos;s journey. Service records, ownership transfers,
                                 and authentications—all in one elegant timeline.
                             </p>
                         </div>
@@ -152,7 +152,7 @@ export default function Home() {
                             </div>
                             <h3 className="text-xl font-bold text-black mb-3">Easy Authentication</h3>
                             <p className="text-text-grey leading-relaxed">
-                                Generate QR codes for instant verification. Share your watch's authenticated
+                                Generate QR codes for instant verification. Share your watch&apos;s authenticated
                                 history with potential buyers or insurance companies.
                             </p>
                         </div>

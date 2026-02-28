@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p tsconfig.json",
+    "test": "JWT_SECRET=test-secret node --import tsx --test src/**/*.test.ts",
     "dev": "nodemon --exec tsx src/index.ts"
   },
   "keywords": [],

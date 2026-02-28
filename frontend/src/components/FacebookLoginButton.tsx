@@ -3,14 +3,18 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { FacebookLogin } from 'react-facebook-login-component';
+import type { FacebookLoginResponse } from 'react-facebook-login-component';
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function FacebookLoginButton() {
     const router = useRouter();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const loginToStore = useAuthStore((state) => state.login);
 
-    const responseFacebook = async (response: any) => {
+    const responseFacebook = async (response: FacebookLoginResponse) => {
         if (response.accessToken) {
             setLoading(true);
             setError('');
@@ -22,15 +26,13 @@ export default function FacebookLoginButton() {
                     userID: response.userID
                 });
 
-                // Store the JWT token and user data
-                localStorage.setItem('token', res.data.token);
-                localStorage.setItem('user', JSON.stringify(res.data.user));
+                loginToStore(res.data.token, res.data.user);
 
                 // Redirect to dashboard
                 router.push('/dashboard');
-            } catch (err: any) {
-                console.error('Facebook login error:', err);
-                setError(err.response?.data?.error || 'Facebook login failed. Please try again.');
+            } catch (error: unknown) {
+                console.error('Facebook login error:', error);
+                setError(getErrorMessage(error, 'Facebook login failed. Please try again.'));
             } finally {
                 setLoading(false);
             }

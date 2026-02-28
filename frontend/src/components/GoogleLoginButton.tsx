@@ -4,11 +4,14 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function GoogleLoginButton() {
     const router = useRouter();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const loginToStore = useAuthStore((state) => state.login);
 
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
@@ -23,15 +26,13 @@ export default function GoogleLoginButton() {
                     token: tokenResponse.access_token
                 });
 
-                // Store the JWT token and user data
-                localStorage.setItem('token', res.data.token);
-                localStorage.setItem('user', JSON.stringify(res.data.user));
+                loginToStore(res.data.token, res.data.user);
 
                 // Redirect to dashboard
                 router.push('/dashboard');
-            } catch (err: any) {
-                console.error('Google login error:', err);
-                setError(err.response?.data?.error || 'Google login failed. Please try again.');
+            } catch (error: unknown) {
+                console.error('Google login error:', error);
+                setError(getErrorMessage(error, 'Google login failed. Please try again.'));
             } finally {
                 setLoading(false);
             }
