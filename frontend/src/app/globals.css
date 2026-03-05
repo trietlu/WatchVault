@@ -3,28 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --axels-black: #222222;
-  --axels-black-dark: #141414;
-  --axels-black-light: #2f2f2f;
-  --axels-cream: #faf9f7;
+  --axels-black: #212121;
+  --axels-black-dark: #111315;
+  --axels-black-light: #353839;
+  --axels-cream: #f7f8f9;
   --axels-white: #ffffff;
-  --axels-light-gray: #fafafa;
-  --axels-gold: #b59a6c;
-  --axels-text: #222222;
-  --axels-muted: #222222b3;
-  --axels-border: #2222221a;
+  --axels-light-gray: #fafbfb;
+  --axels-gold: #353839;
+  --axels-text: #212121;
+  --axels-muted: #353839b3;
+  --axels-border: #2121211f;
 
   /* Legacy aliases used across the app */
   --white: #ffffff;
-  --light-grey: #faf9f7;
-  --medium-grey: #ece8e3;
-  --border-grey: #22222226;
-  --text-grey: #222222b3;
-  --dark-grey: #222222;
-  --black: #222222;
-  --capital-blue: #b59a6c;
+  --light-grey: #f7f8f9;
+  --medium-grey: #d7dde0;
+  --border-grey: #21212126;
+  --text-grey: #353839b3;
+  --dark-grey: #212121;
+  --black: #212121;
+  --capital-blue: #353839;
   --capital-red: #ea384c;
-  --accent-yellow: #b59a6c;
+  --accent-yellow: #353839;
 
   --shadow-sm: 0 1px 2px #00000014;
   --shadow-md: 0 8px 24px #00000014;
@@ -46,7 +46,7 @@ body {
     margin: 0;
     background: var(--axels-cream);
     color: var(--axels-text);
-    font-family: "DM Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 16px;
     font-weight: 400;
     line-height: 1.4;
@@ -59,10 +59,10 @@ body {
   h3 {
     margin: 0;
     color: var(--axels-black);
-    font-family: "Playfair Display", Georgia, "Times New Roman", serif;
-    font-weight: 400;
-    letter-spacing: 0;
-    line-height: 1.05;
+    font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
   }
 
   h1 {
@@ -82,7 +82,7 @@ body {
   h6 {
     margin: 0;
     color: var(--axels-black);
-    font-family: "DM Sans", "Inter", sans-serif;
+    font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
   a {
@@ -162,7 +162,7 @@ body {
   .input-premium:focus {
     outline: none;
     border-color: var(--axels-gold);
-    box-shadow: 0 0 0 3px #b59a6c1f;
+    box-shadow: 0 0 0 3px #3538391f;
   }
 
   .card-premium {
@@ -174,7 +174,7 @@ body {
   }
 
   .card-premium:hover {
-    border-color: #d8cec0;
+    border-color: #c4ccd1;
     box-shadow: var(--shadow-md);
   }
 
@@ -188,7 +188,7 @@ body {
   .card-green {
     @apply rounded-none p-6;
     border: 1px solid var(--axels-gold);
-    background: #f7f4ed;
+    background: #f3f5f6;
     box-shadow: var(--shadow-sm);
   }
 
@@ -223,7 +223,7 @@ body {
   .badge-warning {
     @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs;
     border: 1px solid var(--axels-gold);
-    background-color: #f1ebdf;
+    background-color: #edf1f3;
     color: var(--axels-black);
     font-weight: 600;
     letter-spacing: .4px;
