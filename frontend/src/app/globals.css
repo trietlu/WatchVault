@@ -3,37 +3,36 @@
 @tailwind utilities;
 
 :root {
-  /* Axels Luxury Color Palette */
-  --axels-white: #FFFFFF;
-  --axels-black: #000000;
-  --axels-beige: #F5F5F0;
-  --axels-cream: #FAF9F6;
-  --axels-grey-light: #F8F8F8;
-  --axels-grey: #E5E5E5;
-  --axels-grey-dark: #666666;
-  --axels-text: #1A1A1A;
+  --axels-black: #222222;
+  --axels-black-dark: #141414;
+  --axels-black-light: #2f2f2f;
+  --axels-cream: #faf9f7;
+  --axels-white: #ffffff;
+  --axels-light-gray: #fafafa;
+  --axels-gold: #b59a6c;
+  --axels-text: #222222;
+  --axels-muted: #222222b3;
+  --axels-border: #2222221a;
 
-  /* Legacy variable mappings for compatibility */
-  --white: #FFFFFF;
-  --light-grey: #F8F8F8;
-  --medium-grey: #E5E5E5;
-  --border-grey: #D1D5DB;
-  --text-grey: #666666;
-  --dark-grey: #1A1A1A;
-  --black: #000000;
+  /* Legacy aliases used across the app */
+  --white: #ffffff;
+  --light-grey: #faf9f7;
+  --medium-grey: #ece8e3;
+  --border-grey: #22222226;
+  --text-grey: #222222b3;
+  --dark-grey: #222222;
+  --black: #222222;
+  --capital-blue: #b59a6c;
+  --capital-red: #ea384c;
+  --accent-yellow: #b59a6c;
 
-  /* Shadows - Very Subtle for Luxury Feel */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 1px 2px #00000014;
+  --shadow-md: 0 8px 24px #00000014;
+  --shadow-lg: 0 16px 40px #0000001f;
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
-  margin: 0;
 }
 
 html,
@@ -42,127 +41,118 @@ body {
   overflow-x: hidden;
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.7;
-  letter-spacing: 0.3px;
-  /* Positive for luxury feel */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background: var(--axels-white);
-  color: var(--axels-text);
-}
+@layer base {
+  body {
+    margin: 0;
+    background: var(--axels-cream);
+    color: var(--axels-text);
+    font-family: "DM Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-h1 {
-  font-family: 'Playfair Display', serif;
-  font-size: 56px;
-  font-weight: 400;
-  line-height: 1.2;
-  letter-spacing: 1px;
-  color: var(--axels-black);
-}
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    color: var(--axels-black);
+    font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.05;
+  }
 
-h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 42px;
-  font-weight: 400;
-  line-height: 1.2;
-  letter-spacing: 0.8px;
-  color: var(--axels-black);
-}
+  h1 {
+    font-size: clamp(44px, 8vw, 96px);
+  }
 
-h3 {
-  font-family: 'Playfair Display', serif;
-  font-size: 32px;
-  font-weight: 400;
-  line-height: 1.3;
-  letter-spacing: 0.6px;
-  color: var(--axels-black);
-}
+  h2 {
+    font-size: clamp(34px, 6vw, 64px);
+  }
 
-h4 {
-  font-family: 'Inter', sans-serif;
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0.4px;
-  color: var(--axels-black);
-}
+  h3 {
+    font-size: clamp(26px, 4vw, 40px);
+  }
 
-h5 {
-  font-family: 'Inter', sans-serif;
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.5;
-  letter-spacing: 0.3px;
-  color: var(--axels-black);
-}
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    color: var(--axels-black);
+    font-family: "DM Sans", "Inter", sans-serif;
+  }
 
-h6 {
-  font-family: 'Inter', sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.5;
-  letter-spacing: 0.3px;
-  color: var(--axels-black);
+  a {
+    color: var(--axels-black);
+    text-decoration: none;
+  }
 }
 
 @layer components {
-
-  /* Button Styles - Axels Luxury Minimal */
   .btn-primary {
-    @apply px-8 py-3 font-medium rounded-sm;
-    @apply transition-all duration-300;
-    background-color: var(--axels-black);
-    color: var(--axels-white);
-    border: none;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+    @apply inline-flex items-center justify-center px-10 py-4;
+    border: 1px solid var(--axels-black);
+    background-color: transparent;
+    background-image: linear-gradient(var(--axels-gold), var(--axels-gold));
+    background-position: 100% 50%;
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    color: var(--axels-black);
     font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    line-height: 1;
+    text-transform: uppercase;
+    transition: color .25s ease, border-color .25s ease, background-size .25s ease;
   }
 
   .btn-primary:hover {
-    background-color: var(--axels-grey-dark);
-    box-shadow: var(--shadow-card);
-  }
-
-  .btn-secondary {
-    @apply px-8 py-3 font-medium rounded-sm;
-    @apply transition-all duration-300;
-    background-color: transparent;
-    color: var(--axels-black);
-    border: 1px solid var(--axels-black);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-size: 14px;
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--axels-black);
+    border-color: var(--axels-gold);
+    background-size: 100% 100%;
     color: var(--axels-white);
   }
 
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-10 py-4;
+    border: 1px solid var(--axels-black);
+    background-color: var(--axels-black);
+    color: var(--axels-white);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    line-height: 1;
+    text-transform: uppercase;
+    transition: background-color .25s ease, border-color .25s ease;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--axels-gold);
+    background-color: var(--axels-black-dark);
+  }
+
   .btn-ghost {
-    @apply px-4 py-2 transition-colors duration-300;
-    color: var(--axels-grey-dark);
-    background: transparent;
-    border: none;
+    @apply inline-flex items-center justify-center px-4 py-2;
+    color: var(--text-grey);
+    font-size: 14px;
+    font-weight: 500;
+    transition: color .2s ease;
   }
 
   .btn-ghost:hover {
     color: var(--axels-black);
   }
 
-  /* Input Styles */
   .input-premium {
-    @apply w-full px-4 py-3 rounded-lg;
-    @apply focus:outline-none focus:ring-2;
-    @apply transition-all duration-200;
-    background-color: var(--white);
+    @apply w-full px-4 py-3;
     border: 1px solid var(--border-grey);
+    background-color: var(--white);
     color: var(--black);
+    font-size: 16px;
+    line-height: 1.4;
+    transition: border-color .2s ease, box-shadow .2s ease;
   }
 
   .input-premium::placeholder {
@@ -170,182 +160,80 @@ h6 {
   }
 
   .input-premium:focus {
-    border-color: var(--axels-black);
-    ring-color: var(--axels-black);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    outline: none;
+    border-color: var(--axels-gold);
+    box-shadow: 0 0 0 3px #b59a6c1f;
   }
 
-  /* Card Styles */
   .card-premium {
-    @apply rounded-xl p-6;
-    background: var(--axels-grey-light);
+    @apply rounded-none p-6;
     border: 1px solid var(--medium-grey);
+    background: var(--axels-light-gray);
     box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow .2s ease, border-color .2s ease;
   }
 
   .card-premium:hover {
+    border-color: #d8cec0;
     box-shadow: var(--shadow-md);
   }
 
-  .card-green {
-    @apply rounded-xl p-6;
+  .card-blue {
+    @apply rounded-none p-6;
+    border: 1px solid var(--axels-gold);
     background: var(--white);
-    border: 1px solid var(--axels-black);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .card-green {
+    @apply rounded-none p-6;
+    border: 1px solid var(--axels-gold);
+    background: #f7f4ed;
     box-shadow: var(--shadow-sm);
   }
 
   .card-black {
-    @apply rounded-xl p-6;
+    @apply rounded-none p-6;
+    border: 1px solid var(--axels-black);
     background: var(--axels-black);
     color: var(--white);
     box-shadow: var(--shadow-sm);
   }
+
+  .badge-premium {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs;
+    border: 1px solid var(--axels-black);
+    background-color: var(--axels-black);
+    color: var(--white);
+    font-weight: 600;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs;
+    border: 1px solid #1f8f64;
+    background-color: #1f8f64;
+    color: var(--white);
+    font-weight: 600;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs;
+    border: 1px solid var(--axels-gold);
+    background-color: #f1ebdf;
+    color: var(--axels-black);
+    font-weight: 600;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+  }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .font-display {
-    font-family: 'Inter', sans-serif;
-  }
-
-  .font-body {
-    font-family: 'Inter', sans-serif;
-  }
-
-  /* Birdeye Typography Utilities */
-  .text-xs {
-    font-size: 10px;
-    line-height: 100%;
-    letter-spacing: -0.3px;
-  }
-
-  .text-sm {
-    font-size: 12px;
-    line-height: 150%;
-    letter-spacing: -0.36px;
-  }
-
-  .text-base {
-    font-size: 16px;
-    line-height: 150%;
-    letter-spacing: -0.48px;
-  }
-
-  .text-lg {
-    font-size: 18px;
-    line-height: 150%;
-    letter-spacing: -0.54px;
-  }
-
-  .text-xl {
-    font-size: 20px;
-    line-height: 140%;
-    letter-spacing: -0.6px;
-  }
-
-  .text-2xl {
-    font-size: 24px;
-    line-height: 130%;
-    letter-spacing: -0.72px;
-  }
-
-  .text-3xl {
-    font-size: 30px;
-    line-height: 120%;
-    letter-spacing: -0.9px;
-  }
-
-  .text-4xl {
-    font-size: 36px;
-    line-height: 120%;
-    letter-spacing: -1.08px;
-  }
-
-  .text-5xl {
-    font-size: 48px;
-    line-height: 110%;
-    letter-spacing: -1.44px;
-  }
-
-  /* Font Weight Utilities */
-  .font-normal {
-    font-weight: 400;
-  }
-
-  .font-medium {
-    font-weight: 500;
-  }
-
-  .font-semibold {
-    font-weight: 600;
-  }
-
-  .font-bold {
-    font-weight: 700;
-  }
-
-  /* Uppercase with tight spacing */
-  .text-uppercase {
-    text-transform: uppercase;
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 110%;
-    letter-spacing: -0.48px;
-  }
-
-
-  /* Background Utilities */
-  .bg-axels-black {
-    background-color: var(--axels-black);
-  }
-
-  .bg-axels-black {
-    background-color: var(--axels-black);
-  }
-
-  .bg-light {
-    background-color: var(--light-grey);
-  }
-
-  /* Text Colors */
-  .text-axels-black {
-    color: var(--axels-black);
-  }
-
-  .text-axels-black {
-    color: var(--axels-black);
-  }
-
-  /* Border Utilities */
-  .border-axels-black {
-    border-color: var(--axels-black);
-  }
-
-  .border-axels-black {
-    border-color: var(--axels-black);
-  }
-
-  /* Smooth Transitions */
-  .transition-smooth {
-    transition: all 0.2s ease;
-  }
-
-  /* Shadows */
-  .shadow-capital {
-    box-shadow: var(--shadow-md);
-  }
-
-  .shadow-capital-lg {
-    box-shadow: var(--shadow-lg);
-  }
-
-  /* Hover Effects */
   .hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform .2s ease, box-shadow .2s ease;
   }
 
   .hover-lift:hover {
@@ -353,64 +241,23 @@ h6 {
     box-shadow: var(--shadow-lg);
   }
 
-  /* Scrollbar Styling */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  .shadow-capital {
+    box-shadow: var(--shadow-md);
   }
 
-  ::-webkit-scrollbar-track {
-    background: var(--light-grey);
+  .bg-light {
+    background-color: var(--light-grey);
   }
 
-  ::-webkit-scrollbar-thumb {
-    background: var(--axels-black);
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--axels-black-dark);
-  }
-
-  /* Stats Card */
-  .stat-card {
-    @apply card-premium;
-    @apply flex items-center gap-4;
-  }
-
-  /* Timeline Item */
-  .timeline-item {
-    @apply relative ml-8 mb-8;
-  }
-
-  .timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -37px;
-    top: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--axels-black);
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-  }
-
-  /* Premium Badge */
-  .badge-premium {
-    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium;
+  .bg-axels-black {
     background-color: var(--axels-black);
-    color: var(--white);
   }
 
-  .badge-success {
-    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium;
-    background-color: #10B981;
-    color: var(--white);
+  .text-axels-black {
+    color: var(--axels-black);
   }
 
-  .badge-warning {
-    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium;
-    background-color: var(--accent-yellow);
-    color: var(--black);
+  .border-axels-black {
+    border-color: var(--axels-black);
   }
 }

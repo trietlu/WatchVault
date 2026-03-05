@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     title: "WatchVault",
     description: "Digital Passports for Luxury Watches",
     icons: {
-        icon: '/favicon.png',
+        icon: '/watchvault_favicon.ico',
     },
 };
 
@@ -22,7 +22,7 @@ export default function RootLayout({
             <body
                 className="font-sans"
                 style={{
-                    ['--font-inter' as string]: 'Inter',
+                    ['--font-inter' as string]: '"DM Sans"',
                     ['--font-playfair' as string]: '"Playfair Display"',
                 }}
             >

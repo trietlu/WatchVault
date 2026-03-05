@@ -2,29 +2,62 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Watch, Shield, TrendingUp, Clock, ChevronRight, CheckCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Watch, Shield, TrendingUp, Clock, ChevronRight, CheckCircle, LogOut, User } from 'lucide-react';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export default function Home() {
+    const router = useRouter();
+    const { user, isAuthenticated, logout } = useAuthStore();
+
+    const displayName = user?.name?.trim() || user?.email.split('@')[0] || 'Account';
+    const showAuthenticatedActions = isAuthenticated && user;
+
+    const handleLogout = () => {
+        logout();
+        router.push('/');
+    };
+
     return (
         <div className="min-h-screen bg-light-grey">
             {/* Navigation */}
-            <nav className="bg-axels-black border-b border-axels-black-light sticky top-0 z-50">
+            <nav className="bg-white border-b border-medium-grey sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
-                    <Image
-                        src="/logo.png"
-                        alt="WatchVault"
-                        width={200}
-                        height={80}
-                        className="h-20 w-auto"
-                        priority
-                    />
+                    <Link href="/" className="flex items-center">
+                        <Image
+                            src="/watchvault_logo.svg"
+                            alt="WatchVault"
+                            width={200}
+                            height={80}
+                            className="h-20 w-auto"
+                            priority
+                        />
+                    </Link>
                     <div className="flex items-center gap-4">
-                        <Link href="/login" className="px-4 py-2 transition-colors duration-200 text-white hover:text-axels-black">
-                            Sign In
-                        </Link>
-                        <Link href="/register" className="btn-primary">
-                            Get Started
-                        </Link>
+                        {showAuthenticatedActions ? (
+                            <>
+                                <div className="hidden md:flex items-center gap-2 px-3 py-2 border border-medium-grey bg-light-grey">
+                                    <User className="w-4 h-4 text-axels-black" />
+                                    <span className="text-sm text-dark-grey font-medium">{displayName}</span>
+                                </div>
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-2 px-4 py-2 text-dark-grey hover:text-axels-black transition-all font-medium"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span className="hidden md:inline">Logout</span>
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link href="/login" className="px-4 py-2 transition-colors duration-200 text-dark-grey hover:text-axels-black">
+                                    Sign In
+                                </Link>
+                                <Link href="/register" className="btn-primary">
+                                    Get Started
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </nav>
@@ -199,13 +232,13 @@ export default function Home() {
                                 START YOUR COLLECTION
                             </Link>
                         </div>
-                        <div className="relative">
+                        <div className="relative h-[320px] sm:h-[360px] md:h-[400px]">
                             <Image
-                                src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800&q=80"
+                                src="/pexels-bemistermister-380782.jpg"
                                 alt="Luxury Watch Collection"
-                                width={600}
-                                height={600}
-                                className="rounded-lg object-cover"
+                                fill
+                                sizes="(min-width: 768px) 50vw, 100vw"
+                                className="rounded-lg object-cover object-center"
                             />
                         </div>
                     </div>
@@ -232,7 +265,7 @@ export default function Home() {
             <footer className="bg-white border-t border-medium-grey py-12 px-6">
                 <div className="max-w-7xl mx-auto text-center">
                     <img
-                        src="/logo.png"
+                        src="/watchvault_logo.svg"
                         alt="WatchVault"
                         className="h-8 mb-4"
                     />
