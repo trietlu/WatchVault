@@ -2,6 +2,6 @@ import 'dotenv/config';
 import app from './app.js';
 import { env } from './config/env.js';
 
-app.listen(env.port, () => {
-    console.log(`Server is running on port ${env.port}`);
+app.listen(env.port, env.host, () => {
+    console.log(`Server is running on ${env.host}:${env.port}`);
 });

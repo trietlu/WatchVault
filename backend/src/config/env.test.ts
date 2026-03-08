@@ -14,6 +14,7 @@ test('readEnv applies local defaults when optional values are omitted', () => {
         JWT_SECRET: 'test-secret',
     });
 
+    assert.equal(resolved.host, '0.0.0.0');
     assert.equal(resolved.port, 3001);
     assert.equal(resolved.apiBaseUrl, 'http://localhost:3001');
     assert.equal(resolved.appBaseUrl, 'http://localhost:3000');

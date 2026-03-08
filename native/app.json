@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "WatchVault",
+    "owner": "trietlu",
+    "slug": "watchvault-native",
+    "scheme": "watchvault",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon-watchvault-v2.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-watchvault-v2.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f7f8f9"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.watchvault.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon-watchvault-v2.png",
+        "backgroundColor": "#f7f8f9"
+      },
+      "package": "com.watchvault.app"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

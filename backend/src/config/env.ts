@@ -27,6 +27,7 @@ export const readEnv = (source: EnvSource) => {
     const blockchainEnabled = source.BLOCKCHAIN_ENABLED === 'true';
 
     const resolved = {
+        host: source.HOST ?? '0.0.0.0',
         port: parsePort(source.PORT ?? '3001'),
         jwtSecret: requireEnv(source, 'JWT_SECRET'),
         apiBaseUrl: source.API_BASE_URL ?? 'http://localhost:3001',

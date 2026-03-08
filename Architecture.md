@@ -1,840 +1,356 @@
 # WatchVault Architecture
 
-## Overview
+## 1. Purpose
+This document defines the current WatchVault architecture and the target architecture for expanding the product to React Native and iOS clients. It covers:
+- System components and responsibilities
+- Data model and API boundaries
+- End-to-end data flow for core user journeys
+- Security, deployment, and scale considerations
 
-WatchVault is a full-stack web application for creating digital passports for luxury watches with blockchain-verified provenance. The system consists of a Next.js frontend, Node.js/Express backend, SQLite database, and Ethereum smart contract integration.
+## 2. Product Context
+WatchVault is a digital passport platform for luxury watches. It lets users:
+- Register/login (email/password, Google, Facebook)
+- Create a watch record with hashed serial number
+- Add lifecycle events (service, transfer, authentication, notes)
+- Upload a watch image
+- Share a public passport via QR URL
+- Optionally anchor event hashes to Ethereum
 
-## System Architecture
+## 3. High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         Frontend                             │
-│                      (Next.js 14)                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │   Pages      │  │  Components  │  │   API Client │      │
-│  │  (App Router)│  │   (React)    │  │   (Axios)    │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-└─────────────────────────────────────────────────────────────┘
-                            │ HTTP/REST
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                         Backend                              │
-│                   (Node.js + Express)                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │   Routes     │  │ Controllers  │  │  Middleware  │      │
-│  │              │  │              │  │  (Auth/Upload)│      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-│           │                │                                 │
-│           ▼                ▼                                 │
-│  ┌──────────────┐  ┌──────────────┐                        │
-│  │   Prisma     │  │   Contract   │                        │
-│  │   (ORM)      │  │   Client     │                        │
-│  └──────────────┘  └──────────────┘                        │
-└─────────────────────────────────────────────────────────────┘
-         │                      │
-         ▼                      ▼
-┌──────────────┐      ┌──────────────────┐
-│   SQLite     │      │  Ethereum Node   │
-│   Database   │      │  (Hardhat/RPC)   │
-└──────────────┘      └──────────────────┘
-```
-
-## Frontend Architecture
-
-### Technology Stack
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS (Capital One design system)
-- **State Management**: Zustand (with persistent storage)
-- **HTTP Client**: Axios
-- **Authentication**: JWT tokens managed by Zustand store
-- **Image Optimization**: Next.js Image component
-- **QR Codes**: react-qr-code
-
-### Directory Structure
-```
-frontend/src/
-├── app/                    # Next.js App Router pages
-│   ├── (auth)/            # Authentication pages (login, register)
-│   ├── dashboard/         # Dashboard page
-│   ├── watches/           # Watch management pages
-│   │   ├── new/          # Create watch
-│   │   ├── [id]/         # Watch detail
-│   │   └── [id]/add-event/ # Add event
-│   ├── p/[publicId]/     # Public passport view
-│   ├── layout.tsx        # Root layout
-│   └── page.tsx          # Home page
-├── components/            # Reusable React components
-│   ├── Header.tsx        # Navigation header
-│   └── LoadingSpinner.tsx # Loading indicator
-├── stores/                # Zustand state stores
-│   ├── useAuthStore.ts   # Authentication state
-│   └── useWatchStore.ts  # Watch data state
-├── lib/                   # Utilities
-│   └── api.ts            # Axios instance with auth interceptor
-└── globals.css           # Global styles
+```text
+Clients
+  - Web App (Next.js)
+  - Mobile App (Target: React Native and/or Native iOS)
+           |
+           | HTTPS (REST + JWT)
+           v
+Backend API (Node.js + Express + TypeScript)
+  - Auth routes/controllers
+  - Watch routes/controllers
+  - Public passport route/controller
+  - File upload route/controller
+           |
+           +--> Prisma ORM --> SQLite (current) / Postgres (target prod)
+           |
+           +--> Local file storage (current) / Object storage (target prod)
+           |
+           +--> EVM RPC via ethers.js (optional blockchain anchoring)
 ```
 
-### Key Design Patterns
-
-#### 1. State Management with Zustand
-
-**Authentication Store** (`useAuthStore.ts`):
-```typescript
-interface AuthState {
-    user: User | null;
-    token: string | null;
-    isAuthenticated: boolean;
-    login: (token: string, user: User) => void;
-    logout: () => void;
-}
-```
-
-**Features:**
-- Centralized authentication state
-- Persistent storage (survives page refresh)
-- Automatic localStorage synchronization
-- Type-safe with TypeScript
-- Clean component code (no redundant useState/useEffect)
-
-**Watch Store** (`useWatchStore.ts`):
-```typescript
-interface WatchState {
-    watches: Watch[];
-    selectedWatch: Watch | null;
-    loading: boolean;
-    setWatches: (watches: Watch[]) => void;
-    addWatch: (watch: Watch) => void;
-    updateWatch: (id: number, watch: Partial<Watch>) => void;
-    deleteWatch: (id: number) => void;
-}
-```
-
-**Benefits:**
-- Single source of truth for watch data
-- Optimistic updates for better UX
-- Reduced API calls with caching
-- Easier to test and maintain
-
-#### 2. Authentication Flow
-- JWT tokens managed by Zustand auth store
-- Axios interceptor automatically adds `Authorization` header
-- Protected routes check for token presence
-- Google OAuth and Facebook OAuth integration
-
-#### 3. API Communication
-```typescript
-// Centralized API client (lib/api.ts)
-const api = axios.create({
-    baseURL: 'http://localhost:3001',
-    headers: { 'Content-Type': 'application/json' }
-});
-
-// Automatic token injection
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-});
-```
-
-#### 4. Component Architecture
-- **Server Components**: Used for static content (default in App Router)
-- **Client Components**: Used for interactive features (`'use client'` directive)
-- **Shared Components**: Header, LoadingSpinner for consistency
-
-#### 5. Image Optimization
-
-**Next.js Image Component:**
-- Automatic image optimization (WebP/AVIF)
-- Lazy loading by default
-- Responsive images
-- Blur placeholder support
-- Priority loading for above-fold images
-
-**Configuration** (`next.config.mjs`):
-```javascript
-images: {
-    remotePatterns: [
-        {
-            protocol: 'http',
-            hostname: 'localhost',
-            port: '3001',
-            pathname: '/uploads/**',
-        },
-    ],
-}
-```
-
-**Usage:**
-```tsx
-<Image
-    src="/logo.png"
-    alt="WatchVault"
-    width={200}
-    height={80}
-    className="h-20 w-auto"
-    priority  // For above-fold images
-/>
-```
-
-#### 6. Design System
-- **Colors**: Capital One inspired (blue #004879, red #EF4444)
-- **Components**: Premium cards with shadows, hover effects
-- **Typography**: Inter font family
-- **Spacing**: Consistent padding/margin scale
-
-### Frontend Routing (Next.js App Router)
-
-#### File-Based Routing
-Next.js 14 uses the App Router with file-based routing. Each folder in `app/` represents a route segment.
-
-**Route Mapping:**
-```
-app/page.tsx                    → /
-app/dashboard/page.tsx          → /dashboard
-app/watches/new/page.tsx        → /watches/new
-app/watches/[id]/page.tsx       → /watches/:id (dynamic)
-app/watches/[id]/add-event/page.tsx → /watches/:id/add-event
-app/p/[publicId]/page.tsx       → /p/:publicId (dynamic)
-app/(auth)/login/page.tsx       → /login
-app/(auth)/register/page.tsx    → /register
-```
-
-#### Route Groups
-Parentheses `(auth)` create route groups without affecting the URL:
-- `app/(auth)/login/page.tsx` → `/login` (not `/auth/login`)
-- Used to organize related routes and share layouts
-
-#### Dynamic Routes
-Dynamic segments use square brackets `[param]`:
-
-```typescript
-// app/watches/[id]/page.tsx
-export default function WatchDetailPage({ params }: { params: { id: string } }) {
-    const watchId = params.id; // Access dynamic parameter
-    // Fetch watch data using watchId
-}
-```
-
-#### Layouts
-- `layout.tsx` wraps all child pages
-- Nested layouts inherit from parent layouts
-- Root layout (`app/layout.tsx`) wraps entire app
-
-```typescript
-// app/layout.tsx - Applied to all pages
-export default function RootLayout({ children }) {
-    return (
-        <html lang="en">
-            <body>{children}</body>
-        </html>
-    );
-}
-```
-
-#### Client vs Server Components
-- **Default**: Server Components (rendered on server)
-- **Client Components**: Add `'use client'` directive for interactivity
-
-```typescript
-'use client'; // Makes this a Client Component
-
-import { useState } from 'react';
-
-export default function InteractivePage() {
-    const [count, setCount] = useState(0);
-    // Can use hooks, event handlers, browser APIs
-}
-```
-
-#### Navigation
-```typescript
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-
-// Declarative navigation
-<Link href="/dashboard">Dashboard</Link>
-
-// Programmatic navigation
-const router = useRouter();
-router.push('/watches/123');
-```
-
-#### Route Protection
-Currently implemented client-side:
-```typescript
-useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        router.push('/login');
-    }
-}, []);
-```
-
-## Backend Architecture
-
-### Technology Stack
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Language**: TypeScript (compiled with tsx)
-- **ORM**: Prisma
-- **Database**: SQLite (dev.db)
-- **Authentication**: JWT (jsonwebtoken)
-- **File Upload**: Multer
-- **Blockchain**: ethers.js v6
-- **Password Hashing**: bcryptjs
-
-### Directory Structure
-```
-backend/src/
-├── controllers/           # Request handlers
-│   ├── auth.controller.ts    # Authentication logic
-│   └── watch.controller.ts   # Watch CRUD + blockchain
-├── middleware/            # Express middleware
-│   ├── auth.middleware.ts    # JWT verification
-│   └── upload.middleware.ts  # Multer configuration
-├── routes/                # Route definitions
-│   ├── auth.routes.ts        # /auth endpoints
-│   ├── watch.routes.ts       # /watches endpoints
-│   ├── public.routes.ts      # /passports endpoints
-│   └── file.routes.ts        # /files endpoints
-├── config/                # Configuration
-│   └── contract.ts           # Smart contract ABI & address
-├── prisma/                # Database
-│   ├── schema.prisma         # Data model
-│   ├── migrations/           # Schema migrations
-│   └── dev.db               # SQLite database file
-├── uploads/               # File storage
-│   └── watches/              # Watch images
-├── app.ts                 # Express app setup
-└── index.ts              # Server entry point
-```
-
-### Data Model
-
-```prisma
-model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  passwordHash String?
-  googleId     String?  @unique
-  facebookId   String?  @unique
-  watches      Watch[]
-}
-
-model Watch {
-  id               Int          @id @default(autoincrement())
-  brand            String
-  model            String
-  serialNumberHash String       @unique  // SHA-256 hash
-  publicId         String       @unique  // UUID for public access
-  qrCodeUrl        String?
-  ownerId          Int
-  owner            User         @relation(fields: [ownerId], references: [id])
-  events           WatchEvent[]
-  files            FileRecord[]
-}
-
-model WatchEvent {
-  id          Int      @id @default(autoincrement())
-  watchId     Int
-  eventType   String   // MINT, SERVICE, TRANSFER, AUTH, NOTE
-  payloadJson String   // JSON string of event data
-  payloadHash String   // SHA-256 hash for blockchain
-  txHash      String?  // Ethereum transaction hash
-  blockNumber Int?     // Block number when anchored
-  timestamp   DateTime @default(now())
-  watch       Watch    @relation(fields: [watchId], references: [id])
-  files       FileRecord[]
-}
-
-model FileRecord {
-  id      Int         @id @default(autoincrement())
-  url     String      // /uploads/watches/filename.jpg
-  type    String      // 'image'
-  watchId Int?
-  eventId Int?
-  watch   Watch?      @relation(fields: [watchId], references: [id])
-  event   WatchEvent? @relation(fields: [eventId], references: [id])
-}
-```
-
-### Key Design Patterns
-
-#### 1. Authentication & Authorization
-```typescript
-// JWT-based authentication
-export const authenticateToken = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
-    
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Invalid token' });
-        req.user = user;
-        next();
-    });
-};
-```
-
-#### 2. Serial Number Privacy
-- Serial numbers are **never stored in plaintext**
-- SHA-256 hash stored in database
-- Prevents serial number exposure even if database is compromised
-
-#### 3. Blockchain Integration
-```typescript
-// Event anchoring workflow
-1. Create event in database (status: pending)
-2. Call smart contract: recordEvent(watchHash, eventType, payloadHash)
-3. Wait for transaction confirmation
-4. Update database with txHash and blockNumber
-5. Event status: anchored ✅
-```
-
-#### 4. File Upload Strategy
-- **Storage**: Local filesystem (`uploads/watches/`)
-- **Naming**: Timestamp + random number (collision-proof)
-- **Validation**: File type (jpeg/png/webp) and size (8MB max)
-- **Access**: Served via Express static middleware
-
-#### 5. Error Handling
-- Try-catch blocks in all controllers
-- Specific error messages for client
-- Generic "Internal server error" for unexpected errors
-- Console logging for debugging
-
-### Backend Routing (Express)
-
-#### Route Organization
-Routes are organized by resource in separate files:
-
-```typescript
-// app.ts - Main app setup
-import authRoutes from './routes/auth.routes.js';
-import watchRoutes from './routes/watch.routes.js';
-import publicRoutes from './routes/public.routes.js';
-
-app.use('/auth', authRoutes);        // /auth/*
-app.use('/watches', watchRoutes);    // /watches/*
-app.use('/passports', publicRoutes); // /passports/*
-app.use('/uploads', express.static('uploads')); // Static files
-```
-
-#### Route Definition Pattern
-```typescript
-// routes/watch.routes.ts
-import { Router } from 'express';
-import { createWatch, getWatches } from '../controllers/watch.controller.js';
-import { authenticateToken } from '../middleware/auth.middleware.js';
-import { upload } from '../middleware/upload.middleware.js';
-
-const router = Router();
-
-// Apply middleware, then controller
-router.post('/', authenticateToken, upload.single('image'), createWatch);
-router.get('/', authenticateToken, getWatches);
-router.get('/:id', authenticateToken, getWatchDetail);
-
-export default router;
-```
-
-#### Middleware Chain
-Requests flow through middleware in order:
-
-```
-Request → CORS → JSON Parser → Route Middleware → Controller → Response
-```
-
-**Example flow for `POST /watches`:**
-```
-1. CORS middleware (app.use(cors()))
-2. JSON body parser (app.use(express.json()))
-3. Route matched: POST /watches
-4. authenticateToken middleware (verify JWT)
-5. upload.single('image') middleware (handle file upload)
-6. createWatch controller (business logic)
-7. Response sent to client
-```
-
-#### Authentication Middleware
-```typescript
-// middleware/auth.middleware.ts
-export const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.split(' ')[1]; // "Bearer TOKEN"
-    
-    if (!token) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Invalid token' });
-        req.user = user; // Attach user to request
-        next(); // Continue to next middleware/controller
-    });
-};
-```
-
-#### File Upload Middleware
-```typescript
-// middleware/upload.middleware.ts
-import multer from 'multer';
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/watches/');
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = Date.now() + '-' + Math.random();
-        cb(null, uniqueName + path.extname(file.originalname));
-    }
-});
-
-export const upload = multer({
-    storage,
-    limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
-    fileFilter: (req, file, cb) => {
-        const allowed = /jpeg|jpg|png|webp/;
-        if (allowed.test(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Invalid file type'));
-        }
-    }
-});
-```
-
-#### Controller Pattern
-```typescript
-// controllers/watch.controller.ts
-export const createWatch = async (req: Request, res: Response) => {
-    try {
-        const { brand, model, serialNumber } = req.body;
-        const userId = req.user?.userId; // From auth middleware
-        const file = req.file; // From multer middleware
-        
-        // Validation
-        if (!brand || !model || !serialNumber) {
-            return res.status(400).json({ error: 'Missing fields' });
-        }
-        
-        // Business logic
-        const watch = await prisma.watch.create({
-            data: { brand, model, ownerId: userId }
-        });
-        
-        // Success response
-        res.status(201).json({ watch });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-};
-```
-
-#### Route Parameters
-```typescript
-// Dynamic route: /watches/:id
-router.get('/:id', authenticateToken, async (req, res) => {
-    const { id } = req.params; // Extract parameter
-    const watch = await prisma.watch.findUnique({
-        where: { id: Number(id) }
-    });
-    res.json(watch);
-});
-
-// Multiple parameters: /watches/:id/images/:fileId
-router.delete('/:id/images/:fileId', authenticateToken, async (req, res) => {
-    const { id, fileId } = req.params;
-    // Delete logic
-});
-```
-
-#### Query Parameters
-```typescript
-// GET /watches?page=1&limit=10
-router.get('/', authenticateToken, async (req, res) => {
-    const { page = 1, limit = 10 } = req.query;
-    // Pagination logic
-});
-```
-
-#### Complete Request Flow Example
-
-**Client Request:**
-```typescript
-// Frontend
-const response = await api.post('/watches', {
-    brand: 'Rolex',
-    model: 'Submariner',
-    serialNumber: '123456'
-});
-```
-
-**Backend Processing:**
-```
-1. Request hits Express server
-2. CORS middleware allows request
-3. JSON parser converts body to object
-4. Route matched: POST /watches
-5. authenticateToken middleware:
-   - Extracts JWT from Authorization header
-   - Verifies token
-   - Attaches user to req.user
-6. upload.single('image') middleware:
-   - Checks for image file
-   - Saves to uploads/watches/ if present
-   - Attaches file to req.file
-7. createWatch controller:
-   - Validates input
-   - Hashes serial number
-   - Creates watch in database
-   - Creates MINT event
-   - Returns watch object
-8. Response sent: { watch: {...} }
-```
-
-## Blockchain Integration
-
-### Smart Contract
-```solidity
-// WatchRegistry.sol
-contract WatchRegistry {
-    event EventRecorded(
-        bytes32 indexed watchHash,
-        uint8 eventType,
-        bytes32 payloadHash
-    );
-    
-    function recordEvent(
-        bytes32 watchHash,
-        uint8 eventType,
-        bytes32 payloadHash
-    ) external {
-        emit EventRecorded(watchHash, eventType, payloadHash);
-    }
-}
-```
-
-### Event Type Mapping
-```typescript
-const eventTypeMap = {
-    'MINT': 0,      // Initial registration
-    'SERVICE': 1,   // Maintenance/repair
-    'TRANSFER': 2,  // Ownership change
-    'AUTH': 3,      // Authentication check
-    'NOTE': 4       // General note
-};
-```
-
-### Blockchain Configuration
-- **Development**: Local Hardhat node (http://127.0.0.1:8545)
-- **Contract Address**: 0x5FbDB2315678afecb367f032d93F642f64180aa3
-- **Signer**: Hardhat default account #0
-- **Production**: Configurable via environment variables
-
-## API Endpoints
-
-### Authentication
-- `POST /auth/register` - Create account
-- `POST /auth/login` - Email/password login
-- `POST /auth/google` - Google OAuth login
-- `POST /auth/facebook` - Facebook OAuth login
-
-### Watches
-- `POST /watches` - Create watch (with optional image)
-- `GET /watches` - List user's watches
-- `GET /watches/:id` - Get watch details
-- `POST /watches/:id/events` - Add event (triggers blockchain)
-- `POST /watches/:id/images` - Upload watch image
-- `DELETE /watches/:id/images/:fileId` - Delete watch image
-
-### Public Access
-- `GET /passports/:publicId` - View public passport (no auth)
-
-### Files
-- `GET /uploads/watches/:filename` - Serve uploaded images
-
-## Security Considerations
-
-### Authentication
-- ✅ JWT tokens with expiration (1 day)
-- ✅ Password hashing with bcrypt (10 rounds)
-- ✅ Token validation on protected routes
-- ⚠️ Tokens stored in localStorage (vulnerable to XSS)
-
-### Data Privacy
-- ✅ Serial numbers hashed (SHA-256)
-- ✅ User-specific data isolation
-- ✅ Public passports use UUID (not sequential IDs)
-
-### File Upload
-- ✅ File type validation (whitelist)
-- ✅ File size limits (8MB)
-- ✅ Unique filenames (prevents overwrites)
-- ⚠️ No virus scanning
-- ⚠️ No CDN/cloud storage (local only)
-
-### Blockchain
-- ✅ Immutable event records
-- ✅ Cryptographic proof (hashes)
-- ⚠️ Private key hardcoded (dev only)
-- ⚠️ No gas price management
-
-## Performance Considerations
-
-### Frontend
-- **Code Splitting**: Next.js automatic route-based splitting
-- **Image Optimization**: Next.js Image component (not currently used)
-- **Caching**: Browser caching for static assets
-- **Bundle Size**: ~500KB (reasonable for SPA)
-
-### Backend
-- **Database**: SQLite (single file, fast for <100K records)
-- **Connection Pooling**: Prisma default pooling
-- **File Serving**: Express static (efficient for small files)
-- **Blockchain**: Async operations (non-blocking)
-
-### Scalability Limits
-- SQLite: Good for <100K watches, <1M events
-- File Storage: Local disk (limited by server capacity)
-- Blockchain: Gas costs scale linearly with events
-
-## Deployment Architecture
-
-### Development
-```
-Frontend: http://localhost:3000 (Next.js dev server)
-Backend:  http://localhost:3001 (tsx + nodemon)
-Database: ./backend/prisma/dev.db (SQLite file)
-Blockchain: http://127.0.0.1:8545 (Hardhat node)
-```
-
-### Production (Recommended)
-```
-Frontend: Vercel / Netlify (static export or SSR)
-Backend:  Railway / Render / AWS EC2
-Database: PostgreSQL (Supabase / Railway)
-Files:    AWS S3 / Cloudinary
-Blockchain: Infura / Alchemy (Sepolia or Mainnet)
-```
-
-## Future Improvements
-
-### Frontend
-- [x] ~~Implement proper state management (Zustand/Redux)~~ ✅ **COMPLETED** - Zustand implemented
-- [x] ~~Add image optimization with Next.js Image~~ ✅ **COMPLETED** - Next.js Image configured
-- [ ] Migrate dashboard to use `useWatchStore`
-- [ ] Add loading states and error handling to stores
-- [ ] Implement optimistic updates for watch operations
-- [ ] Implement infinite scroll for watch lists
-- [ ] Add offline support (PWA)
-- [ ] Improve mobile responsiveness
-- [ ] Add image blur placeholders
-- [ ] Implement Zustand DevTools for debugging
-
-### Backend
-- [ ] Migrate to PostgreSQL for production
-- [ ] Implement rate limiting (express-rate-limit)
-- [ ] Add request validation (Zod/Joi)
-- [ ] Implement proper logging (Winston/Pino)
-- [ ] Add API documentation (Swagger/OpenAPI)
-- [ ] Implement background jobs (Bull/BullMQ)
-- [ ] Add database connection pooling
-- [ ] Implement caching layer (Redis)
-
-### Security
-- [ ] Move tokens to httpOnly cookies
-- [ ] Implement refresh tokens
-- [ ] Add CSRF protection
-- [ ] Implement rate limiting per user/IP
-- [ ] Add input sanitization (DOMPurify)
-- [ ] Implement file virus scanning (ClamAV)
-- [ ] Add security headers (Helmet.js)
-- [ ] Implement 2FA/MFA support
-
-### Blockchain
-- [ ] Add gas price estimation
-- [ ] Implement transaction retry logic
-- [ ] Add event indexing service (The Graph)
-- [ ] Support multiple networks (Polygon, Arbitrum)
-- [ ] Implement wallet connection (MetaMask, WalletConnect)
-- [ ] Add transaction monitoring and notifications
-- [ ] Implement batch event anchoring for cost optimization
-- [ ] Add event indexing service
-- [ ] Support multiple networks
-- [ ] Implement wallet connection (MetaMask)
-
-### DevOps
-- [ ] Add Docker containers
-- [ ] Implement CI/CD pipeline
-- [ ] Add automated testing
-- [ ] Implement monitoring (Sentry)
-- [ ] Add health check endpoints
-
-## Development Workflow
-
-### Starting the Application
-```bash
-# Terminal 1: Backend
-cd backend
-npm run dev
-
-# Terminal 2: Frontend  
-cd frontend
-npm run dev
-
-# Terminal 3: Blockchain (optional)
-cd contracts
-npx hardhat node
-
-# Terminal 4: Deploy contract (optional)
-cd contracts
-npx hardhat run scripts/deploy.js --network localhost
-```
-
-### Database Migrations
-```bash
-cd backend
-npx prisma migrate dev --name description
-npx prisma generate
-```
-
-### Building for Production
-```bash
-# Frontend
-cd frontend
-npm run build
-npm run start
-
-# Backend
-cd backend
-npm run build
-node dist/index.js
-```
-
-## Key Files Reference
-
-### Configuration
-- `frontend/.env.local` - Frontend environment variables
-- `backend/.env` - Backend environment variables (gitignored)
-- `backend/prisma/schema.prisma` - Database schema
-- `contracts/hardhat.config.js` - Blockchain configuration
-
-### Entry Points
-- `frontend/src/app/layout.tsx` - Root layout
-- `frontend/src/app/page.tsx` - Home page
-- `backend/src/index.ts` - Server entry
-- `backend/src/app.ts` - Express app setup
-
-### Core Logic
-- `frontend/src/lib/api.ts` - API client
-- `backend/src/controllers/watch.controller.ts` - Watch business logic
-- `backend/src/config/contract.ts` - Blockchain integration
-- `contracts/contracts/WatchRegistry.sol` - Smart contract
-
----
-
-**Last Updated**: December 2024  
-**Version**: 1.0.0
+## 4. Current Codebase Components
+
+### 4.1 Frontend (Web, Next.js App Router)
+Location: `frontend/src`
+
+- `app/`
+  - Public pages: `/` and `/p/[publicId]`
+  - Auth pages: `/login`, `/register`
+  - Authenticated pages: `/dashboard`, `/watches/new`, `/watches/[id]`, `/watches/[id]/add-event`
+- `components/`
+  - Shared UI (Header, cards, OAuth buttons, loading/empty states)
+- `stores/`
+  - `useAuthStore.ts` (persisted auth/session)
+  - `useWatchStore.ts` (watch list/detail cache)
+- `lib/`
+  - `api.ts` Axios client + auth header interceptor
+  - `config.ts` app/API URL helpers
+
+State and session:
+- JWT token is stored in `localStorage` and Zustand persisted state.
+- Axios request interceptor injects `Authorization: Bearer <token>`.
+
+### 4.2 Backend (Express API)
+Location: `backend/src`
+
+- Entry and app wiring:
+  - `index.ts` boots server
+  - `app.ts` configures middleware and route mounts
+- Routes:
+  - `auth.routes.ts` -> `/auth/*`
+  - `watch.routes.ts` -> `/watches/*`
+  - `public.routes.ts` -> `/passports/*`
+  - `file.routes.ts` -> `/files/*`
+- Controllers:
+  - `auth.controller.ts`
+  - `watch.controller.ts`
+  - `public.controller.ts`
+  - `file.controller.ts`
+- Middleware:
+  - `auth.middleware.ts` (JWT validation)
+  - `upload.middleware.ts` (Multer image upload constraints)
+- Infra/config:
+  - `config/env.ts` central env parsing/validation
+  - `config/contract.ts` ethers contract client + ABI
+
+### 4.3 Database and ORM
+- Prisma schema: `backend/prisma/schema.prisma`
+- Current datasource: SQLite (`provider = "sqlite"`)
+- Core models:
+  - `User`
+  - `Watch`
+  - `WatchEvent`
+  - `FileRecord`
+
+### 4.4 Smart Contract
+Location: `contracts/contracts/WatchRegistry.sol`
+
+- Event-only registry contract
+- Function: `recordEvent(bytes32 watchHash, uint8 eventType, bytes32 payloadHash)`
+- Emits `EventRecorded` event
+
+### 4.5 Mobile App (React Native, implemented)
+Location: `native/src`
+
+- Framework/runtime:
+  - Expo SDK 54 + React Native 0.81
+  - TypeScript strict mode
+- Navigation:
+  - Native stack navigator with split unauthenticated/authenticated stacks
+  - Deep link mapping for `/login`, `/register`, `/dashboard`, watch detail/event routes, and public passport route
+- Auth/session state:
+  - Zustand persisted store
+  - Token persistence uses Expo SecureStore (`secureStorage`) on device
+- API integration:
+  - Shared backend contract via Axios client + Bearer token interceptor
+  - Uses same API resources as web (`/auth/*`, `/watches/*`, `/passports/:publicId`)
+- UI design system:
+  - Shared primitives: `Screen`, `Card`, `PrimaryButton`, `SecondaryButton`
+  - Central color tokens (`background`, `surface`, `text`, `mutedText`, `border`, `primary`, `danger`)
+  - Rounded card-based layout with light theme and muted grayscale palette
+- Branding:
+  - Native app icon/splash/adaptive icon are mapped in `native/app.json`
+  - Auth screens render WatchVault logo (`assets/watchvault-logo-v2.png`)
+- Entry experience:
+  - `HomeScreen` acts as landing page with brand messaging + CTA buttons (`Create Account`, `Sign In`)
+  - Includes public passport lookup input for direct verification
+- OAuth status in native:
+  - Google sign-in hook is implemented (`useGoogleAuth`)
+  - Expo Go is explicitly blocked for Google OAuth in local dev; requires development build (`npm run ios`/`npm run android`)
+
+## 5. API Surface
+
+### 5.1 Auth
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/google`
+- `POST /auth/facebook`
+
+### 5.2 Watches
+- `POST /watches` (multipart: brand/model/serialNumber + optional image)
+- `GET /watches`
+- `GET /watches/:id`
+- `POST /watches/:id/events`
+- `POST /watches/:id/images`
+- `DELETE /watches/:id/images/:fileId`
+
+### 5.3 Public and Files
+- `GET /passports/:publicId`
+- `POST /files/upload`
+- `GET /uploads/*` (static file serving)
+
+## 6. Data Model and Domain Rules
+
+### 6.1 User
+- Unique email
+- Can have password auth and/or linked social providers (Google/Facebook)
+
+### 6.2 Watch
+- Owned by one user
+- Raw serial number is never persisted
+- `serialNumberHash` (SHA-256) is stored and unique
+- `publicId` used for public passport URL
+
+### 6.3 WatchEvent
+- Event types: `MINT`, `SERVICE`, `TRANSFER`, `AUTH`, `NOTE`
+- `payloadJson` and derived `payloadHash` are persisted
+- `txHash` and `blockNumber` populated when blockchain anchoring succeeds
+
+### 6.4 FileRecord
+- Associates uploaded image with watch and/or event
+- Current storage URL pattern: `/uploads/watches/<filename>`
+
+## 7. End-to-End Data Flows
+
+### 7.1 Email Registration/Login Flow
+1. Client submits credentials to `/auth/register` or `/auth/login`.
+2. Backend validates request and user state, hashes password where needed.
+3. Backend signs JWT (`userId`, 1-day expiry) and returns `{ token, user }`.
+4. Client stores token/user in persisted state (`localStorage` on web, `Expo SecureStore` on native).
+5. Subsequent API requests include Bearer token via Axios interceptor.
+
+### 7.2 OAuth Login Flow (Current Native: Google)
+1. Mobile client starts OAuth via `expo-auth-session` Google provider.
+2. After provider redirect, client extracts access token and calls `POST /auth/google`.
+3. Backend verifies token against Google userinfo API and upserts/links user.
+4. Backend returns WatchVault JWT.
+5. Client stores session in persisted auth store and continues with normal Bearer-authenticated API calls.
+6. In Expo Go local development, Google OAuth is blocked by design and the app instructs users to run a dev build instead.
+
+### 7.3 Create Watch Flow
+1. Authenticated client posts multipart form to `/watches`.
+2. Backend validates owner and required fields.
+3. Backend hashes serial number and enforces uniqueness.
+4. Backend creates `Watch`.
+5. If image provided, backend stores file and inserts `FileRecord`.
+6. Backend generates `qrCodeUrl` for public passport.
+7. Backend inserts initial `MINT` event with hashed payload.
+8. Backend returns created watch payload.
+
+### 7.4 Add Event + Blockchain Anchoring Flow
+1. Authenticated client posts `{ eventType, payload }` to `/watches/:id/events`.
+2. Backend verifies watch ownership.
+3. Backend writes event to DB first with payload hash.
+4. If `BLOCKCHAIN_ENABLED=false`: return created event immediately.
+5. If enabled:
+   - Backend calls contract `recordEvent(...)`
+   - Waits for tx receipt
+   - Updates event with `txHash` and `blockNumber`
+6. On chain failure, backend still returns DB event (pending/off-chain state).
+
+### 7.5 Public Passport View Flow
+1. Public client requests `/passports/:publicId`.
+2. Backend fetches watch by `publicId` and event timeline.
+3. Serializer strips owner-sensitive/internal fields.
+4. Client displays provenance timeline and blockchain metadata (if present).
+
+## 8. Security and Privacy Architecture
+
+- Authentication:
+  - JWT bearer tokens on protected endpoints
+  - Route-level auth middleware
+- Data minimization:
+  - Serial numbers hashed before persistence
+  - Public endpoint excludes owner info and raw event payload JSON
+- Upload controls:
+  - MIME/extension checks
+  - 8 MB file limit
+- Current security gaps to close for production:
+  - CORS is currently open (`app.use(cors())`)
+  - No token revocation strategy
+  - Local file storage is not cloud-resilient
+  - SQLite is not suitable for horizontal production scale
+
+## 9. Native App Design (Current Implementation)
+
+This section captures the implemented design and interaction model in `native/`.
+
+### 9.1 Visual Design Language
+- Style direction:
+  - Clean, card-based UI with neutral grayscale palette and high-contrast text
+  - Rounded controls and containers (`radius 10-12`) with subtle borders
+- Tokenized theming:
+  - All core colors are centralized in `src/theme/tokens.ts`
+  - Navigation theme inherits token values for background/card/border consistency
+- Branding application:
+  - WatchVault logo appears on authentication screens
+  - App icon, splash image, and Android adaptive icon are branded in Expo config
+
+### 9.2 Information Architecture and Navigation
+- Unauthenticated experience:
+  - `Home` landing page
+  - `Login`
+  - `Register`
+  - `PublicPassport` (lookup/view)
+- Authenticated experience:
+  - `Dashboard` (collection list)
+  - `NewWatch` (mint flow)
+  - `WatchDetail`
+  - `AddEvent`
+  - `PublicPassport` (shared with unauth flow)
+- Navigation behavior:
+  - Separate stacks for authenticated and unauthenticated users
+  - Hydration gate shows loader until persisted auth state is ready
+
+### 9.3 Screen-Level Design Patterns
+- `HomeScreen`:
+  - Product value proposition and primary CTAs
+  - Quick public passport verification by public ID
+- Auth screens:
+  - Shared card layout, logo header, concise helper text, error region
+  - Inputs explicitly disable autofill/autocorrect where needed to prevent blocked/yellow autofill states
+- Form interaction:
+  - Primary action button + secondary navigation button hierarchy
+  - Inline validation errors with consistent danger color token
+
+### 9.4 Native Auth UX and Platform Constraints
+- Email/password:
+  - Uses backend `/auth/register` and `/auth/login`
+  - Session token persisted via SecureStore-backed Zustand storage
+- Google sign-in:
+  - Implemented through `expo-auth-session` + backend `/auth/google`
+  - Not supported in Expo Go local dev; requires dev build runtime
+- Facebook sign-in:
+  - Backend endpoint exists, but native client does not currently expose Facebook login UI
+
+### 9.5 Design and Architecture Follow-Ups
+- Optional future visual enhancements:
+  - Introduce custom typefaces (if font files are provided)
+  - Add motion/transition layer for screen entry and card interactions
+- Functional enhancements:
+  - Offline caching and submission queue
+  - Push-notification surfaces for transfer/auth events
+  - Native iOS-specific UX refinements if a dedicated Swift client is pursued
+
+## 10. Deployment Architecture
+
+### 10.1 Current Dev Topology
+- Web frontend: local Next.js dev server
+- Backend API: local Express on `:3001`
+- DB: local SQLite file
+- Files: local filesystem under uploads dir
+- Blockchain: optional local Hardhat node
+
+### 10.2 Recommended Production Topology
+- Frontend:
+  - Web on Vercel
+  - Mobile via App Store distribution
+- Backend:
+  - Containerized Express API on managed compute (App Runner/Cloud Run/ECS)
+- Database:
+  - Postgres (managed)
+- Files:
+  - Object storage + CDN
+- Secrets/config:
+  - Managed secret store + environment-specific config
+- Observability:
+  - Structured logs, request tracing, error tracking, health probes
+
+## 11. Scaling and Reliability Plan
+
+- API:
+  - Add pagination/filtering for watch/event lists
+  - Add rate limiting and abuse protection
+- Data:
+  - Move SQLite -> Postgres for concurrency and durability
+  - Add indexes for `ownerId`, `publicId`, event time ordering
+- Files:
+  - Migrate local uploads to object storage
+- Background jobs:
+  - Move blockchain anchoring to queue-based async workers for resilience
+
+## 12. Architecture Decision Summary
+
+- Keep a single backend API for all clients (web, React Native, iOS).
+- Reuse existing JWT and endpoint contracts to accelerate mobile delivery and preserve parity.
+- Prioritize infrastructure migrations (Postgres + object storage) before public scale.
+- React Native app is now implemented as the primary mobile client; native iOS-only implementation remains optional for deeper platform integration.
+
+## 13. Key File Reference
+- Web entry/layout: `frontend/src/app/layout.tsx`
+- Web routes: `frontend/src/app/**/page.tsx`
+- API client: `frontend/src/lib/api.ts`
+- Auth state: `frontend/src/stores/useAuthStore.ts`
+- Watch state: `frontend/src/stores/useWatchStore.ts`
+- API app wiring: `backend/src/app.ts`
+- Watch business logic: `backend/src/controllers/watch.controller.ts`
+- Auth business logic: `backend/src/controllers/auth.controller.ts`
+- Public serializer: `backend/src/serializers/public-passport.ts`
+- Prisma schema: `backend/prisma/schema.prisma`
+- Contract: `contracts/contracts/WatchRegistry.sol`
+- Native app config: `native/app.json`
+- Native navigator: `native/src/navigation/AppNavigator.tsx`
+- Native landing screen: `native/src/screens/HomeScreen.tsx`
+- Native auth screens: `native/src/screens/auth/LoginScreen.tsx`, `native/src/screens/auth/RegisterScreen.tsx`
+- Native design tokens: `native/src/theme/tokens.ts`
+- Native auth state storage: `native/src/stores/useAuthStore.ts`, `native/src/lib/storage.ts`

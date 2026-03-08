@@ -45,3 +45,12 @@ coverage/
 
 # Misc
 .vercel
+
+# Native app (Expo / React Native)
+native/.expo/
+native/.expo-shared/
+native/.env
+native/.env.*
+!native/.env.example
+native/ios/
+native/android/
