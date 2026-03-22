@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import QRCode from 'react-qr-code';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
@@ -45,12 +46,14 @@ const eventIcons: Record<string, React.ReactNode> = {
     AUTH: <FileText className="w-4 h-4" />,
 };
 
-export default function WatchDetailPage({ params }: { params: { id: string } }) {
+export default function WatchDetailPage() {
+    const params = useParams<{ id: string }>();
+    const watchId = params.id;
     const selectedWatch = useWatchStore((state) => state.selectedWatch);
     const setSelectedWatch = useWatchStore((state) => state.setSelectedWatch);
     const updateWatch = useWatchStore((state) => state.updateWatch);
     const [watch, setWatch] = useState<Watch | null>(
-        selectedWatch?.id === Number(params.id) ? selectedWatch as Watch : null
+        selectedWatch?.id === Number(watchId) ? selectedWatch as Watch : null
     );
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
@@ -58,7 +61,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
     useEffect(() => {
         const fetchWatch = async () => {
             try {
-                const res = await api.get(`/watches/${params.id}`);
+                const res = await api.get(`/watches/${watchId}`);
                 setWatch(res.data);
                 setSelectedWatch(res.data);
                 updateWatch(res.data.id, res.data);
@@ -70,7 +73,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
         };
 
         fetchWatch();
-    }, [params.id, setSelectedWatch, updateWatch]);
+    }, [setSelectedWatch, updateWatch, watchId]);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -93,14 +96,14 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
             const formData = new FormData();
             formData.append('image', file);
 
-            await api.post(`/watches/${params.id}/images`, formData, {
+            await api.post(`/watches/${watchId}/images`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
 
             // Refresh watch data
-            const res = await api.get(`/watches/${params.id}`);
+            const res = await api.get(`/watches/${watchId}`);
             setWatch(res.data);
             setSelectedWatch(res.data);
             updateWatch(res.data.id, res.data);
@@ -116,10 +119,10 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
         if (!confirm('Are you sure you want to delete this image?')) return;
 
         try {
-            await api.delete(`/watches/${params.id}/images/${fileId}`);
+            await api.delete(`/watches/${watchId}/images/${fileId}`);
 
             // Refresh watch data
-            const res = await api.get(`/watches/${params.id}`);
+            const res = await api.get(`/watches/${watchId}`);
             setWatch(res.data);
             setSelectedWatch(res.data);
             updateWatch(res.data.id, res.data);

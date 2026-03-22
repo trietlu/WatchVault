@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
@@ -16,7 +16,9 @@ const eventTypeOptions = [
     { value: 'NOTE', label: 'Note / Log', icon: 'NL' },
 ];
 
-export default function AddEventPage({ params }: { params: { id: string } }) {
+export default function AddEventPage() {
+    const params = useParams<{ id: string }>();
+    const watchId = params.id;
     const [eventType, setEventType] = useState('SERVICE');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
@@ -38,18 +40,18 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
         };
 
         try {
-            const res = await api.post(`/watches/${params.id}/events`, {
+            const res = await api.post(`/watches/${watchId}/events`, {
                 eventType,
                 payload,
             });
 
-            if (selectedWatch?.id === Number(params.id)) {
+            if (selectedWatch?.id === Number(watchId)) {
                 setSelectedWatch({
                     ...selectedWatch,
                     events: [...(selectedWatch.events ?? []), res.data],
                 });
             }
-            router.push(`/watches/${params.id}`);
+            router.push(`/watches/${watchId}`);
         } catch (error) {
             console.error('Failed to add event', error);
             alert('Failed to add event');
@@ -64,7 +66,7 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
 
             <main className="max-w-3xl mx-auto px-6 py-12">
                 <Link
-                    href={`/watches/${params.id}`}
+                    href={`/watches/${watchId}`}
                     className="mb-8 inline-flex items-center gap-2 font-medium text-[color:var(--muted)] transition-colors hover:text-[color:var(--ink)]"
                 >
                     <ArrowLeft className="w-5 h-5" />

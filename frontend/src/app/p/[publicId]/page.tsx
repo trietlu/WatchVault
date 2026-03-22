@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import api from '@/lib/api';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
@@ -23,14 +24,16 @@ interface Watch {
     events: Event[];
 }
 
-export default function PublicPassportPage({ params }: { params: { publicId: string } }) {
+export default function PublicPassportPage() {
+    const params = useParams<{ publicId: string }>();
+    const publicId = params.publicId;
     const [watch, setWatch] = useState<Watch | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchPassport = async () => {
             try {
-                const res = await api.get(`/passports/${params.publicId}`);
+                const res = await api.get(`/passports/${publicId}`);
                 setWatch(res.data);
             } catch (error) {
                 console.error('Failed to fetch passport', error);
@@ -40,7 +43,7 @@ export default function PublicPassportPage({ params }: { params: { publicId: str
         };
 
         fetchPassport();
-    }, [params.publicId]);
+    }, [publicId]);
 
     if (loading) {
         return (

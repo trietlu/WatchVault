@@ -8,7 +8,6 @@ import { Mail, Lock, ArrowRight } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
-import FacebookLoginButton from '@/components/FacebookLoginButton';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { getErrorMessage } from '@/lib/errors';
 
@@ -82,9 +81,8 @@ export default function RegisterPage() {
                             <p className="mt-3 text-base text-[color:var(--muted)]">Use social auth or create an account with email.</p>
                         </div>
 
-                        <div className="space-y-3 mb-8">
+                        <div className="mb-8">
                             <GoogleLoginButton />
-                            <FacebookLoginButton />
                         </div>
 
                         <div className="relative mb-8">
