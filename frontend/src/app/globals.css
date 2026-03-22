@@ -3,32 +3,48 @@
 @tailwind utilities;
 
 :root {
-  --axels-black: #212121;
-  --axels-black-dark: #111315;
-  --axels-black-light: #353839;
-  --axels-cream: #f7f8f9;
-  --axels-white: #ffffff;
-  --axels-light-gray: #fafbfb;
-  --axels-gold: #353839;
-  --axels-text: #212121;
-  --axels-muted: #353839b3;
-  --axels-border: #2121211f;
+  --background: #f4ede3;
+  --background-accent: #e7d1bf;
+  --surface: #fffaf4;
+  --surface-strong: #f2e6d9;
+  --surface-muted: #eadbcc;
+  --ink: #1f1712;
+  --muted: #6e5a4d;
+  --accent: #8b5d47;
+  --accent-strong: #6f4130;
+  --accent-soft: #d8b39c;
+  --line: #dac8b9;
+  --success: #41634f;
+  --warning: #a06f4a;
+  --danger: #ac4c41;
+  --footer: #201711;
+  --footer-foreground: #f7efe6;
+  --footer-muted: #bea893;
 
-  /* Legacy aliases used across the app */
-  --white: #ffffff;
-  --light-grey: #f7f8f9;
-  --medium-grey: #d7dde0;
-  --border-grey: #21212126;
-  --text-grey: #353839b3;
-  --dark-grey: #212121;
-  --black: #212121;
-  --capital-blue: #353839;
-  --capital-red: #ea384c;
-  --accent-yellow: #353839;
+  --white: var(--surface);
+  --light-grey: var(--background);
+  --medium-grey: var(--line);
+  --border-grey: #5a47391f;
+  --text-grey: var(--muted);
+  --dark-grey: var(--ink);
+  --black: var(--ink);
+  --capital-blue: var(--accent);
+  --capital-red: var(--danger);
+  --accent-yellow: var(--warning);
+  --axels-black: var(--ink);
+  --axels-black-dark: #140f0b;
+  --axels-black-light: #503c31;
+  --axels-cream: var(--background);
+  --axels-white: var(--surface);
+  --axels-light-gray: var(--surface);
+  --axels-gold: var(--accent);
+  --axels-text: var(--ink);
+  --axels-muted: #6e5a4dcc;
+  --axels-border: #5a47391f;
 
-  --shadow-sm: 0 1px 2px #00000014;
-  --shadow-md: 0 8px 24px #00000014;
-  --shadow-lg: 0 16px 40px #0000001f;
+  --shadow-sm: 0 12px 32px #5e44311a;
+  --shadow-md: 0 24px 50px #4f382414;
+  --shadow-lg: 0 36px 70px #3f2c1d1f;
 }
 
 * {
@@ -44,12 +60,16 @@ body {
 @layer base {
   body {
     margin: 0;
-    background: var(--axels-cream);
-    color: var(--axels-text);
-    font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, #f8f0e8 0%, #f8f0e800 32%),
+      radial-gradient(circle at top right, #ead6c6 0%, #ead6c600 28%),
+      linear-gradient(180deg, var(--background) 0%, #f7f0e7 100%);
+    color: var(--ink);
+    font-family: var(--font-sans), "Manrope", sans-serif;
     font-size: 16px;
     font-weight: 400;
-    line-height: 1.4;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -58,98 +78,103 @@ body {
   h2,
   h3 {
     margin: 0;
-    color: var(--axels-black);
-    font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+    color: var(--ink);
+    font-family: var(--font-editorial), "Cormorant Garamond", serif;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
   }
 
   h1 {
-    font-size: clamp(44px, 8vw, 96px);
+    font-size: clamp(52px, 9vw, 112px);
   }
 
   h2 {
-    font-size: clamp(34px, 6vw, 64px);
+    font-size: clamp(42px, 7vw, 76px);
   }
 
   h3 {
-    font-size: clamp(26px, 4vw, 40px);
+    font-size: clamp(28px, 4.6vw, 46px);
   }
 
   h4,
   h5,
   h6 {
     margin: 0;
-    color: var(--axels-black);
-    font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    font-family: var(--font-sans), "Manrope", sans-serif;
   }
 
   a {
-    color: var(--axels-black);
+    color: var(--ink);
     text-decoration: none;
+  }
+
+  p {
+    margin: 0;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center px-10 py-4;
-    border: 1px solid var(--axels-black);
-    background-color: transparent;
-    background-image: linear-gradient(var(--axels-gold), var(--axels-gold));
-    background-position: 100% 50%;
-    background-repeat: no-repeat;
-    background-size: 0% 100%;
-    color: var(--axels-black);
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+    border: 1px solid var(--accent-strong);
+    border-radius: 999px;
+    background-color: var(--accent-strong);
+    color: var(--surface);
     font-size: 14px;
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 0.02em;
     line-height: 1;
-    text-transform: uppercase;
-    transition: color .25s ease, border-color .25s ease, background-size .25s ease;
+    transition: transform .25s ease, background-color .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
 
   .btn-primary:hover {
-    border-color: var(--axels-gold);
-    background-size: 100% 100%;
-    color: var(--axels-white);
+    border-color: var(--accent);
+    background-color: var(--accent);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-10 py-4;
-    border: 1px solid var(--axels-black);
-    background-color: var(--axels-black);
-    color: var(--axels-white);
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background-color: var(--surface);
+    color: var(--ink);
     font-size: 14px;
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 0.02em;
     line-height: 1;
-    text-transform: uppercase;
-    transition: background-color .25s ease, border-color .25s ease;
+    transition: transform .25s ease, background-color .25s ease, border-color .25s ease;
   }
 
   .btn-secondary:hover {
-    border-color: var(--axels-gold);
-    background-color: var(--axels-black-dark);
+    border-color: var(--accent-soft);
+    background-color: var(--surface-strong);
+    transform: translateY(-1px);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center px-4 py-2;
-    color: var(--text-grey);
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2;
+    border-radius: 999px;
+    color: var(--muted);
     font-size: 14px;
-    font-weight: 500;
-    transition: color .2s ease;
+    font-weight: 600;
+    transition: color .2s ease, background-color .2s ease;
   }
 
   .btn-ghost:hover {
-    color: var(--axels-black);
+    background-color: var(--surface);
+    color: var(--ink);
   }
 
   .input-premium {
-    @apply w-full px-4 py-3;
-    border: 1px solid var(--border-grey);
-    background-color: var(--white);
-    color: var(--black);
+    @apply w-full px-5 py-3.5;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background-color: var(--surface);
+    color: var(--ink);
     font-size: 16px;
     line-height: 1.4;
     transition: border-color .2s ease, box-shadow .2s ease;
@@ -161,50 +186,55 @@ body {
 
   .input-premium:focus {
     outline: none;
-    border-color: var(--axels-gold);
-    box-shadow: 0 0 0 3px #3538391f;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px #8b5d4714;
   }
 
   .card-premium {
-    @apply rounded-none p-6;
-    border: 1px solid var(--medium-grey);
-    background: var(--axels-light-gray);
+    @apply p-6;
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    background: linear-gradient(180deg, #fffaf5 0%, #fbf5ee 100%);
     box-shadow: var(--shadow-sm);
     transition: box-shadow .2s ease, border-color .2s ease;
   }
 
   .card-premium:hover {
-    border-color: #c4ccd1;
+    border-color: #c9b39e;
     box-shadow: var(--shadow-md);
   }
 
   .card-blue {
-    @apply rounded-none p-6;
-    border: 1px solid var(--axels-gold);
-    background: var(--white);
+    @apply p-6;
+    border: 1px solid var(--accent-soft);
+    border-radius: 28px;
+    background: linear-gradient(180deg, #fffaf5 0%, #f7ede3 100%);
     box-shadow: var(--shadow-sm);
   }
 
   .card-green {
-    @apply rounded-none p-6;
-    border: 1px solid var(--axels-gold);
-    background: #f3f5f6;
+    @apply p-6;
+    border: 1px solid #b9ccb6;
+    border-radius: 28px;
+    background: #eff4ec;
     box-shadow: var(--shadow-sm);
   }
 
   .card-black {
-    @apply rounded-none p-6;
-    border: 1px solid var(--axels-black);
-    background: var(--axels-black);
-    color: var(--white);
+    @apply p-6;
+    border: 1px solid #2c221a;
+    border-radius: 28px;
+    background: linear-gradient(180deg, #261c15 0%, #1d1510 100%);
+    color: var(--surface);
     box-shadow: var(--shadow-sm);
   }
 
   .badge-premium {
     @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs;
-    border: 1px solid var(--axels-black);
-    background-color: var(--axels-black);
-    color: var(--white);
+    border: 1px solid var(--accent-soft);
+    border-radius: 999px;
+    background-color: #ecd9ca;
+    color: var(--ink);
     font-weight: 600;
     letter-spacing: .4px;
     text-transform: uppercase;
@@ -212,9 +242,10 @@ body {
 
   .badge-success {
     @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs;
-    border: 1px solid #1f8f64;
-    background-color: #1f8f64;
-    color: var(--white);
+    border: 1px solid #adc1b2;
+    border-radius: 999px;
+    background-color: #e7efe8;
+    color: var(--success);
     font-weight: 600;
     letter-spacing: .4px;
     text-transform: uppercase;
@@ -222,9 +253,10 @@ body {
 
   .badge-warning {
     @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs;
-    border: 1px solid var(--axels-gold);
-    background-color: #edf1f3;
-    color: var(--axels-black);
+    border: 1px solid #d3b697;
+    border-radius: 999px;
+    background-color: #f3e8dc;
+    color: var(--warning);
     font-weight: 600;
     letter-spacing: .4px;
     text-transform: uppercase;
@@ -237,7 +269,7 @@ body {
   }
 
   .hover-lift:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
   }
 
@@ -259,5 +291,9 @@ body {
 
   .border-axels-black {
     border-color: var(--axels-black);
+  }
+
+  .font-editorial {
+    font-family: var(--font-editorial), "Cormorant Garamond", serif;
   }
 }

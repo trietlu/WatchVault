@@ -18,24 +18,20 @@ export default function EmptyState({
 }: EmptyStateProps) {
     return (
         <div className="card-premium text-center py-16 px-8">
-            {/* Icon */}
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-capital-blue/10 mb-6">
-                {icon || <Sparkles className="w-10 h-10 text-capital-blue" />}
+            <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-[color:var(--surface-strong)]">
+                {icon || <Sparkles className="h-10 w-10 text-[color:var(--accent-strong)]" />}
             </div>
 
-            {/* Title */}
-            <h3 className="text-2xl font-bold text-black mb-3">
+            <h3 className="text-[color:var(--ink)]">
                 {title}
             </h3>
 
-            {/* Description */}
-            <p className="text-text-grey text-lg mb-8 max-w-md mx-auto">
+            <p className="mx-auto mb-8 mt-4 max-w-md text-lg text-[color:var(--muted)]">
                 {description}
             </p>
 
-            {/* Action Button */}
             {actionLabel && actionHref && (
-                <Link href={actionHref} className="btn-primary inline-block">
+                <Link href={actionHref} className="btn-primary inline-flex">
                     {actionLabel}
                 </Link>
             )}
