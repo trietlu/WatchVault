@@ -45,7 +45,7 @@ export default function FacebookLoginButton() {
 
     if (!appId) {
         return (
-            <div className="w-full p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="w-full rounded-[20px] border border-[#d3b697] bg-[#f3e8dc] p-4">
                 <p className="text-sm text-yellow-800 text-center">
                     Facebook Login is not configured. Please add NEXT_PUBLIC_FACEBOOK_APP_ID to your .env.local file.
                 </p>
@@ -60,11 +60,11 @@ export default function FacebookLoginButton() {
                 autoLoad={false}
                 fields="name,email,picture"
                 callback={responseFacebook}
-                cssClass="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white border-2 border-medium-grey rounded-lg hover:bg-light-grey transition-all cursor-pointer"
+                cssClass="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[color:var(--surface)] border border-[color:var(--line)] rounded-full hover:bg-[color:var(--surface-strong)] hover:border-[color:var(--accent-soft)] transition-all cursor-pointer"
                 textButton={loading ? 'Signing in...' : 'Continue with Facebook'}
                 icon={
                     loading ? (
-                        <div className="w-5 h-5 border-2 border-capital-blue border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-5 h-5 border-2 border-[color:var(--accent-strong)] border-t-transparent rounded-full animate-spin"></div>
                     ) : (
                         <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
                             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -73,7 +73,7 @@ export default function FacebookLoginButton() {
                 }
             />
             {error && (
-                <p className="text-capital-red text-sm mt-2">{error}</p>
+                <p className="mt-2 text-sm text-[color:var(--danger)]">{error}</p>
             )}
         </div>
     );

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
 import { CheckCircle, Clock, Shield, FileText, Hash } from 'lucide-react';
 
 interface Event {
@@ -40,103 +42,128 @@ export default function PublicPassportPage({ params }: { params: { publicId: str
         fetchPassport();
     }, [params.publicId]);
 
-    if (loading) return <div className="p-8 text-center">Loading Passport...</div>;
-    if (!watch) return <div className="p-8 text-center">Passport not found</div>;
+    if (loading) {
+        return (
+            <div className="min-h-screen">
+                <Header />
+                <div className="p-8 text-center text-[color:var(--muted)]">Loading Passport...</div>
+                <Footer />
+            </div>
+        );
+    }
+
+    if (!watch) {
+        return (
+            <div className="min-h-screen">
+                <Header />
+                <div className="p-8 text-center text-[color:var(--muted)]">Passport not found</div>
+                <Footer />
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-black p-8">
-            <div className="max-w-3xl mx-auto">
-                <div className="text-center mb-12">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">WatchVault Passport</h1>
-                    <p className="text-gray-500 dark:text-gray-400">Verified Digital Provenance</p>
-                </div>
+        <div className="min-h-screen">
+            <Header />
 
-                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 overflow-hidden shadow-lg mb-8">
-                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-32"></div>
-                    <div className="px-8 pb-8">
-                        <div className="relative -top-12 mb-[-30px]">
-                            <div className="inline-flex items-center justify-center w-24 h-24 bg-white dark:bg-zinc-900 rounded-full border-4 border-white dark:border-zinc-900 shadow-md">
-                                <span className="text-4xl">⌚️</span>
-                            </div>
-                        </div>
-
-                        <div className="mt-4">
-                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{watch.brand}</h2>
-                            <p className="text-xl text-gray-500 dark:text-gray-400 mb-6">{watch.model}</p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-zinc-800/50 p-4 rounded-lg">
-                                <div>
-                                    <span className="block text-xs text-gray-500 uppercase tracking-wider">Serial Hash</span>
-                                    <span className="font-mono text-sm break-all">{watch.serialNumberHash}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-xs text-gray-500 uppercase tracking-wider">Passport ID</span>
-                                    <span className="font-mono text-sm">{watch.publicId}</span>
-                                </div>
-                            </div>
-                        </div>
+            <main className="px-6 py-10 md:py-16">
+                <div className="mx-auto max-w-5xl">
+                    <div className="mb-12 text-center">
+                        <p className="text-sm uppercase tracking-[0.28em] text-[color:var(--muted)]">Public passport</p>
+                        <h1 className="mt-4 text-[color:var(--ink)]">WatchVault Passport</h1>
+                        <p className="mt-3 text-lg text-[color:var(--muted)]">Verified Digital Provenance</p>
                     </div>
-                </div>
 
-                <div className="space-y-8">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white px-2">Provenance Timeline</h3>
+                    <div className="mb-8 overflow-hidden rounded-[32px] border border-[color:var(--line)] bg-[color:var(--surface)] shadow-[var(--shadow-md)]">
+                        <div className="h-32 bg-[linear-gradient(135deg,#8b5d47_0%,#c69c81_100%)]"></div>
+                        <div className="px-8 pb-8">
+                            <div className="relative mb-[-30px] -top-12">
+                                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full border-4 border-[color:var(--surface)] bg-[color:var(--surface-strong)] shadow-md">
+                                    <span className="text-4xl">WV</span>
+                                </div>
+                            </div>
 
-                    <div className="relative border-l-2 border-gray-200 dark:border-zinc-700 ml-4 space-y-8 pb-8">
-                        {watch.events.map((event, index) => {
-                            return (
-                                <div key={index} className="ml-8 relative">
-                                    <span className="absolute -left-[41px] flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-black border-2 border-gray-200 dark:border-zinc-700">
-                                        {event.eventType === 'MINT' ? <Shield size={14} className="text-blue-600" /> :
-                                            event.eventType === 'SERVICE' ? <Clock size={14} className="text-blue-600" /> :
-                                                <FileText size={14} className="text-blue-600" />}
-                                    </span>
+                            <div className="mt-4">
+                                <h2 className="text-[color:var(--ink)]">{watch.brand}</h2>
+                                <p className="mb-6 text-xl text-[color:var(--muted)]">{watch.model}</p>
 
-                                    <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 p-5 shadow-sm hover:shadow-md transition-shadow">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{event.eventType}</h4>
-                                            {event.txHash ? (
-                                                <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">
-                                                    <CheckCircle size={12} /> Verified
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 text-yellow-600 text-xs font-medium bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-full">
-                                                    <Clock size={12} /> Pending
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <time className="block text-sm text-gray-500 mb-4">
-                                            {new Date(event.timestamp).toLocaleDateString()}
-                                        </time>
-
-                                        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-zinc-800/50 p-3 rounded border border-gray-100 dark:border-zinc-700/50">
-                                            <div className="flex items-start gap-2">
-                                                <Hash size={14} className="mt-0.5 shrink-0 text-blue-600" />
-                                                <div>
-                                                    <div className="font-medium opacity-70">Payload Hash</div>
-                                                    <div className="font-mono break-all">{event.payloadHash}</div>
-                                                </div>
-                                            </div>
-                                            {event.txHash && (
-                                                <div>
-                                                    <div className="font-medium opacity-70">Transaction</div>
-                                                    <div className="font-mono break-all">{event.txHash}</div>
-                                                </div>
-                                            )}
-                                            {typeof event.blockNumber === 'number' && (
-                                                <div>
-                                                    <div className="font-medium opacity-70">Block</div>
-                                                    <div>{event.blockNumber}</div>
-                                                </div>
-                                            )}
-                                        </div>
+                                <div className="grid grid-cols-1 gap-4 rounded-[24px] bg-[color:var(--surface-strong)] p-4 md:grid-cols-2">
+                                    <div>
+                                        <span className="block text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">Serial Hash</span>
+                                        <span className="break-all font-mono text-sm text-[color:var(--ink)]">{watch.serialNumberHash}</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">Passport ID</span>
+                                        <span className="font-mono text-sm text-[color:var(--ink)]">{watch.publicId}</span>
                                     </div>
                                 </div>
-                            );
-                        })}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        <h3 className="px-2 text-[color:var(--ink)]">Provenance Timeline</h3>
+
+                        <div className="relative ml-4 space-y-8 border-l-2 border-[color:var(--accent-soft)] pb-8">
+                            {watch.events.map((event, index) => {
+                                return (
+                                    <div key={index} className="relative ml-8">
+                                        <span className="absolute -left-[41px] flex h-8 w-8 items-center justify-center rounded-full border-2 border-[color:var(--line)] bg-[color:var(--surface)]">
+                                            {event.eventType === 'MINT' ? <Shield size={14} className="text-[color:var(--accent-strong)]" /> :
+                                                event.eventType === 'SERVICE' ? <Clock size={14} className="text-[color:var(--accent-strong)]" /> :
+                                                    <FileText size={14} className="text-[color:var(--accent-strong)]" />}
+                                        </span>
+
+                                        <div className="rounded-[24px] border border-[color:var(--line)] bg-[color:var(--surface)] p-5 shadow-sm transition-shadow hover:shadow-md">
+                                            <div className="mb-2 flex items-start justify-between gap-4">
+                                                <h4 className="text-lg font-semibold text-[color:var(--ink)]">{event.eventType}</h4>
+                                                {event.txHash ? (
+                                                    <span className="badge-success">
+                                                        <CheckCircle size={12} /> Verified
+                                                    </span>
+                                                ) : (
+                                                    <span className="badge-warning">
+                                                        <Clock size={12} /> Pending
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <time className="mb-4 block text-sm text-[color:var(--muted)]">
+                                                {new Date(event.timestamp).toLocaleDateString()}
+                                            </time>
+
+                                            <div className="space-y-2 rounded-[18px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-3 text-sm text-[color:var(--ink)]">
+                                                <div className="flex items-start gap-2">
+                                                    <Hash size={14} className="mt-0.5 shrink-0 text-[color:var(--accent-strong)]" />
+                                                    <div>
+                                                        <div className="font-medium opacity-70">Payload Hash</div>
+                                                        <div className="break-all font-mono">{event.payloadHash}</div>
+                                                    </div>
+                                                </div>
+                                                {event.txHash && (
+                                                    <div>
+                                                        <div className="font-medium opacity-70">Transaction</div>
+                                                        <div className="break-all font-mono">{event.txHash}</div>
+                                                    </div>
+                                                )}
+                                                {typeof event.blockNumber === 'number' && (
+                                                    <div>
+                                                        <div className="font-medium opacity-70">Block</div>
+                                                        <div>{event.blockNumber}</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
-            </div>
+
+            </main>
+
+            <Footer />
         </div>
     );
 }

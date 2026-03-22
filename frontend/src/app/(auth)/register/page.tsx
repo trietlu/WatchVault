@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import api from '@/lib/api';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
 import FacebookLoginButton from '@/components/FacebookLoginButton';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -48,149 +49,139 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen bg-light-grey flex items-center justify-center p-6">
-            <div className="w-full max-w-md">
-                {/* Logo */}
-                <Link href="/" className="flex items-center justify-center mb-8">
-                    <Image
-                        src="/logo.png"
-                        alt="WatchVault"
-                        width={240}
-                        height={96}
-                        className="h-24 w-auto"
-                        priority
-                    />
-                </Link>
+        <div className="min-h-screen">
+            <Header />
 
-                {/* Register Card */}
-                <div className="card-premium p-8">
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-black mb-2">Create Account</h1>
-                        <p className="text-text-grey">Start preserving your collection</p>
-                    </div>
-
-                    {/* OAuth Buttons */}
-                    <div className="space-y-3 mb-8">
-                        <GoogleLoginButton />
-                        <FacebookLoginButton />
-                    </div>
-
-                    <div className="relative mb-8">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-medium-grey"></div>
+            <main className="px-6 py-10 md:py-16">
+                <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+                    <div className="card-premium flex flex-col justify-between gap-10">
+                        <div>
+                            <p className="text-sm uppercase tracking-[0.28em] text-[color:var(--muted)]">Create account</p>
+                            <h1 className="mt-4 text-[color:var(--ink)]">Create Account</h1>
+                            <p className="mt-5 max-w-lg text-base leading-7 text-[color:var(--muted)]">
+                                Start preserving your collection with blockchain-secured digital passports.
+                            </p>
                         </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-4 bg-white text-text-grey">Or continue with email</span>
+
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                            <div className="rounded-[24px] bg-[color:var(--surface-strong)] p-5">
+                                <p className="text-sm uppercase tracking-[0.24em] text-[color:var(--muted)]">Security</p>
+                                <p className="mt-3 text-lg text-[color:var(--ink)]">Raw serial numbers stay hashed before they persist.</p>
+                            </div>
+                            <div className="rounded-[24px] bg-[color:var(--surface-strong)] p-5">
+                                <p className="text-sm uppercase tracking-[0.24em] text-[color:var(--muted)]">Passports</p>
+                                <p className="mt-3 text-lg text-[color:var(--ink)]">Generate public passports and manage your watch history in one place.</p>
+                            </div>
                         </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Email Input */}
-                        <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-grey" />
-                                <input
-                                    type="email"
-                                    required
-                                    className="input-premium pl-12"
-                                    placeholder="you@example.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
+                    <div className="card-premium p-8 md:p-10">
+                        <div className="mb-8">
+                            <p className="text-sm uppercase tracking-[0.28em] text-[color:var(--muted)]">Register</p>
+                            <h2 className="mt-3 text-[color:var(--ink)]">Start preserving your collection.</h2>
+                            <p className="mt-3 text-base text-[color:var(--muted)]">Use social auth or create an account with email.</p>
+                        </div>
+
+                        <div className="space-y-3 mb-8">
+                            <GoogleLoginButton />
+                            <FacebookLoginButton />
+                        </div>
+
+                        <div className="relative mb-8">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-[color:var(--line)]"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="bg-[color:var(--surface)] px-4 text-[color:var(--muted)]">Or continue with email</span>
                             </div>
                         </div>
 
-                        {/* Password Input */}
-                        <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-grey" />
-                                <input
-                                    type="password"
-                                    required
-                                    className="input-premium pl-12"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
+                                    Email Address
+                                </label>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[color:var(--muted)]" />
+                                    <input
+                                        type="email"
+                                        required
+                                        className="input-premium pl-12"
+                                        placeholder="you@example.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                </div>
                             </div>
-                            <p className="text-xs text-text-grey mt-1">Minimum 6 characters</p>
-                        </div>
 
-                        {/* Confirm Password Input */}
-                        <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
-                                Confirm Password
-                            </label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-grey" />
-                                <input
-                                    type="password"
-                                    required
-                                    className="input-premium pl-12"
-                                    placeholder="••••••••"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                />
+                            <div>
+                                <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
+                                    Password
+                                </label>
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[color:var(--muted)]" />
+                                    <input
+                                        type="password"
+                                        required
+                                        className="input-premium pl-12"
+                                        placeholder="********"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                </div>
+                                <p className="mt-2 text-xs text-[color:var(--muted)]">Minimum 6 characters</p>
                             </div>
-                        </div>
 
-                        {/* Error Message */}
-                        {error && (
-                            <div className="p-4 rounded-lg bg-axels-black/10 border border-axels-black/20">
-                                <p className="text-axels-black text-sm">{error}</p>
+                            <div>
+                                <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
+                                    Confirm Password
+                                </label>
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[color:var(--muted)]" />
+                                    <input
+                                        type="password"
+                                        required
+                                        className="input-premium pl-12"
+                                        placeholder="********"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                </div>
                             </div>
-                        )}
 
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="btn-primary w-full group disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {loading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    Creating account...
-                                </span>
-                            ) : (
-                                <span className="flex items-center justify-center gap-2">
-                                    Create Account
-                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                </span>
+                            {error && (
+                                <div className="rounded-[20px] border border-[#d7b0aa] bg-[#f8ece9] p-4">
+                                    <p className="text-sm text-[color:var(--danger)]">{error}</p>
+                                </div>
                             )}
-                        </button>
-                    </form>
 
-                    {/* Divider */}
-                    <div className="relative my-8">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-medium-grey"></div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {loading ? 'Creating account...' : 'Create Account'}
+                                {!loading && <ArrowRight className="h-4 w-4" />}
+                            </button>
+                        </form>
+
+                        <div className="relative my-8">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-[color:var(--line)]"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="bg-[color:var(--surface)] px-4 text-[color:var(--muted)]">Already have an account?</span>
+                            </div>
                         </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-4 bg-white text-text-grey">Already have an account?</span>
-                        </div>
+
+                        <Link href="/login" className="btn-secondary w-full">
+                            Sign In
+                        </Link>
                     </div>
-
-                    {/* Login Link */}
-                    <Link
-                        href="/login"
-                        className="btn-secondary w-full text-center block"
-                    >
-                        Sign In
-                    </Link>
                 </div>
+            </main>
 
-                {/* Footer */}
-                <p className="text-center text-text-grey text-sm mt-8">
-                    Secured by blockchain technology
-                </p>
-            </div>
+            <Footer />
         </div>
     );
 }

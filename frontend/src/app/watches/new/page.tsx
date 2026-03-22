@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 import Header from '@/components/Header';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { ArrowLeft, Watch, Sparkles, Upload, X } from 'lucide-react';
 import { useWatchStore } from '@/stores/useWatchStore';
 import { getErrorMessage } from '@/lib/errors';
@@ -17,8 +19,20 @@ export default function NewWatchPage() {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [authChecked, setAuthChecked] = useState(false);
     const router = useRouter();
     const addWatch = useWatchStore((state) => state.addWatch);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setAuthChecked(true);
+            router.replace('/login');
+            return;
+        }
+
+        setAuthChecked(true);
+    }, [router]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -54,6 +68,12 @@ export default function NewWatchPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!localStorage.getItem('token')) {
+            router.replace('/login');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
@@ -85,56 +105,66 @@ export default function NewWatchPage() {
         }
     };
 
+    if (!authChecked) {
+        return (
+            <div className="min-h-screen bg-light-grey">
+                <Header />
+
+                <main className="mx-auto max-w-3xl px-6 py-12">
+                    <div className="card-premium">
+                        <LoadingSpinner />
+                    </div>
+                </main>
+
+                <Footer />
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-light-grey">
             <Header />
 
-            <div className="max-w-3xl mx-auto px-6 py-12">
-                {/* Back Button */}
+            <main className="mx-auto max-w-3xl px-6 py-12">
                 <Link
                     href="/dashboard"
-                    className="inline-flex items-center gap-2 text-text-grey hover:text-axels-black transition-colors mb-8 font-medium"
+                    className="mb-8 inline-flex items-center gap-2 font-medium text-[color:var(--muted)] transition-colors hover:text-[color:var(--ink)]"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     <span>Back to Dashboard</span>
                 </Link>
 
-                {/* Form Card */}
                 <div className="card-premium">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-axels-black/10 text-axels-black mb-4">
+                    <div className="mb-8 text-center">
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[color:var(--surface-strong)] px-4 py-2 text-[color:var(--accent-strong)]">
                             <Sparkles className="w-4 h-4" />
                             <span className="text-sm font-semibold">Digital Passport</span>
                         </div>
-                        <h1 className="text-4xl font-bold text-black mb-3">
+                        <h1 className="mb-3 text-[color:var(--ink)]">
                             Mint New Watch
                         </h1>
-                        <p className="text-text-grey text-lg">
-                            Create a blockchain-secured digital passport for your timepiece
+                        <p className="text-lg text-[color:var(--muted)]">
+                            Create a blockchain-secured digital passport for your timepiece.
                         </p>
                     </div>
 
-                    {/* Error Message */}
                     {error && (
-                        <div className="mb-6 p-4 rounded-lg bg-axels-black/10 border border-axels-black/20">
-                            <p className="text-axels-black text-sm">{error}</p>
+                        <div className="mb-6 rounded-[20px] border border-[#d7b0aa] bg-[#f8ece9] p-4">
+                            <p className="text-sm text-[color:var(--danger)]">{error}</p>
                         </div>
                     )}
 
-                    {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Image Upload */}
                         <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
+                            <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
                                 Watch Image (Optional)
                             </label>
                             {!imagePreview ? (
                                 <label className="block cursor-pointer">
-                                    <div className="border-2 border-dashed border-medium-grey rounded-lg p-8 text-center hover:border-axels-black hover:bg-axels-black/5 transition-all">
-                                        <Upload className="w-12 h-12 text-text-grey mx-auto mb-3" />
-                                        <p className="text-dark-grey font-medium mb-1">Click to upload image</p>
-                                        <p className="text-sm text-text-grey">JPEG, PNG, or WebP (max 8MB)</p>
+                                    <div className="rounded-[24px] border-2 border-dashed border-[color:var(--line)] p-8 text-center transition-all hover:border-[color:var(--accent)] hover:bg-[color:var(--surface-strong)]">
+                                        <Upload className="mx-auto mb-3 h-12 w-12 text-[color:var(--muted)]" />
+                                        <p className="mb-1 font-medium text-[color:var(--ink)]">Click to upload image</p>
+                                        <p className="text-sm text-[color:var(--muted)]">JPEG, PNG, or WebP (max 8MB)</p>
                                     </div>
                                     <input
                                         type="file"
@@ -148,12 +178,12 @@ export default function NewWatchPage() {
                                     <img
                                         src={imagePreview}
                                         alt="Watch preview"
-                                        className="w-full h-64 object-cover rounded-lg"
+                                        className="h-64 w-full rounded-[24px] object-cover"
                                     />
                                     <button
                                         type="button"
                                         onClick={removeImage}
-                                        className="absolute top-2 right-2 p-2 bg-axels-black text-white rounded-full hover:bg-axels-black/90 transition-colors"
+                                        className="absolute right-3 top-3 rounded-full bg-[color:var(--footer)] p-2 text-white transition-colors hover:bg-[#30241c]"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -161,13 +191,12 @@ export default function NewWatchPage() {
                             )}
                         </div>
 
-                        {/* Brand Input */}
                         <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
+                            <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
                                 Brand
                             </label>
                             <div className="relative">
-                                <Watch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-grey" />
+                                <Watch className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[color:var(--muted)]" />
                                 <input
                                     type="text"
                                     required
@@ -179,9 +208,8 @@ export default function NewWatchPage() {
                             </div>
                         </div>
 
-                        {/* Model Input */}
                         <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
+                            <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
                                 Model
                             </label>
                             <input
@@ -194,9 +222,8 @@ export default function NewWatchPage() {
                             />
                         </div>
 
-                        {/* Serial Number Input */}
                         <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
+                            <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
                                 Serial Number
                             </label>
                             <input
@@ -207,8 +234,8 @@ export default function NewWatchPage() {
                                 value={serialNumber}
                                 onChange={(e) => setSerialNumber(e.target.value)}
                             />
-                            <div className="mt-3 p-4 rounded-lg bg-axels-black/10 border border-axels-black/20">
-                                <p className="text-sm text-axels-black flex items-start gap-2">
+                            <div className="mt-3 rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4">
+                                <p className="flex items-start gap-2 text-sm text-[color:var(--ink)]">
                                     <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                     <span>
                                         Your serial number will be cryptographically hashed before storage.
@@ -218,7 +245,6 @@ export default function NewWatchPage() {
                             </div>
                         </div>
 
-                        {/* Submit Button */}
                         <div className="pt-4">
                             <button
                                 type="submit"
@@ -241,22 +267,23 @@ export default function NewWatchPage() {
                     </form>
                 </div>
 
-                {/* Info Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div className="card-premium text-center">
-                        <div className="text-2xl mb-2">🔒</div>
-                        <p className="text-sm text-text-grey font-medium">Blockchain Secured</p>
+                        <div className="mb-2 text-2xl">Blockchain</div>
+                        <p className="text-sm font-medium text-[color:var(--muted)]">Blockchain Secured</p>
                     </div>
                     <div className="card-premium text-center">
-                        <div className="text-2xl mb-2">📱</div>
-                        <p className="text-sm text-text-grey font-medium">QR Code Access</p>
+                        <div className="mb-2 text-2xl">Passport</div>
+                        <p className="text-sm font-medium text-[color:var(--muted)]">QR Code Access</p>
                     </div>
                     <div className="card-premium text-center">
-                        <div className="text-2xl mb-2">📜</div>
-                        <p className="text-sm text-text-grey font-medium">Complete History</p>
+                        <div className="mb-2 text-2xl">Timeline</div>
+                        <p className="text-sm font-medium text-[color:var(--muted)]">Complete History</p>
                     </div>
                 </div>
-            </div>
+            </main>
+
+            <Footer />
         </div>
     );
 }

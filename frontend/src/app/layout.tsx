@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Cormorant_Garamond, Manrope } from 'next/font/google';
 import "./globals.css";
 
-const plusJakarta = Plus_Jakarta_Sans({
+const cormorant = Cormorant_Garamond({
     subsets: ['latin'],
-    variable: '--font-plus-jakarta',
+    variable: '--font-editorial',
+    display: 'swap',
+    weight: ['400', '500', '600', '700'],
+});
+
+const manrope = Manrope({
+    subsets: ['latin'],
+    variable: '--font-sans',
     display: 'swap',
     weight: ['400', '500', '600', '700', '800'],
 });
@@ -27,7 +34,7 @@ export default function RootLayout({
 
     return (
         <html lang="en">
-            <body className={`${plusJakarta.variable} font-sans`}>
+            <body className={`${cormorant.variable} ${manrope.variable}`}>
                 <GoogleOAuthProvider clientId={googleClientId}>
                     {children}
                 </GoogleOAuthProvider>

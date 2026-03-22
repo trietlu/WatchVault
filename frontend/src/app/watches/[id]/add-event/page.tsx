@@ -4,15 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Link from 'next/link';
+import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { ArrowLeft, Calendar, MapPin, FileText, Sparkles } from 'lucide-react';
 import { useWatchStore } from '@/stores/useWatchStore';
 
 const eventTypeOptions = [
-    { value: 'SERVICE', label: 'Service / Repair', icon: '🔧' },
-    { value: 'AUTH', label: 'Authentication', icon: '✓' },
-    { value: 'TRANSFER', label: 'Ownership Transfer', icon: '↔️' },
-    { value: 'NOTE', label: 'Note / Log', icon: '📝' },
+    { value: 'SERVICE', label: 'Service / Repair', icon: 'SR' },
+    { value: 'AUTH', label: 'Authentication', icon: 'AT' },
+    { value: 'TRANSFER', label: 'Ownership Transfer', icon: 'OT' },
+    { value: 'NOTE', label: 'Note / Log', icon: 'NL' },
 ];
 
 export default function AddEventPage({ params }: { params: { id: string } }) {
@@ -61,37 +62,32 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
         <div className="min-h-screen bg-light-grey">
             <Header />
 
-            <div className="max-w-3xl mx-auto px-6 py-12">
-                {/* Back Button */}
+            <main className="max-w-3xl mx-auto px-6 py-12">
                 <Link
                     href={`/watches/${params.id}`}
-                    className="inline-flex items-center gap-2 text-text-grey hover:text-axels-black transition-colors mb-8 font-medium"
+                    className="mb-8 inline-flex items-center gap-2 font-medium text-[color:var(--muted)] transition-colors hover:text-[color:var(--ink)]"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     <span>Back to Watch</span>
                 </Link>
 
-                {/* Form Card */}
                 <div className="card-premium">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-axels-black/10 text-axels-black mb-4">
+                    <div className="mb-8 text-center">
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[color:var(--surface-strong)] px-4 py-2 text-[color:var(--accent-strong)]">
                             <Sparkles className="w-4 h-4" />
                             <span className="text-sm font-semibold">Lifecycle Event</span>
                         </div>
-                        <h1 className="text-4xl font-bold text-black mb-3">
+                        <h1 className="mb-3 text-[color:var(--ink)]">
                             Record Event
                         </h1>
-                        <p className="text-text-grey text-lg">
+                        <p className="text-lg text-[color:var(--muted)]">
                             Add a new event to your watch&apos;s history timeline
                         </p>
                     </div>
 
-                    {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Event Type */}
                         <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-3">
+                            <label className="mb-3 block text-sm font-semibold text-[color:var(--ink)]">
                                 Event Type
                             </label>
                             <div className="grid grid-cols-2 gap-3">
@@ -100,13 +96,13 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                                         key={option.value}
                                         type="button"
                                         onClick={() => setEventType(option.value)}
-                                        className={`p-4 rounded-lg border-2 transition-all ${eventType === option.value
-                                                ? 'border-axels-black bg-axels-black/10'
-                                                : 'border-medium-grey bg-white hover:border-axels-black/50'
+                                        className={`rounded-[20px] border-2 p-4 transition-all ${eventType === option.value
+                                                ? 'border-[color:var(--accent)] bg-[color:var(--surface-strong)]'
+                                                : 'border-[color:var(--line)] bg-[color:var(--surface)] hover:border-[color:var(--accent-soft)]'
                                             }`}
                                     >
                                         <div className="text-2xl mb-2">{option.icon}</div>
-                                        <div className={`text-sm font-semibold ${eventType === option.value ? 'text-axels-black' : 'text-dark-grey'
+                                        <div className={`text-sm font-semibold ${eventType === option.value ? 'text-[color:var(--ink)]' : 'text-[color:var(--muted)]'
                                             }`}>
                                             {option.label}
                                         </div>
@@ -115,13 +111,12 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                             </div>
                         </div>
 
-                        {/* Description */}
                         <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
+                            <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
                                 Description
                             </label>
                             <div className="relative">
-                                <FileText className="absolute left-4 top-4 w-5 h-5 text-text-grey" />
+                                <FileText className="absolute left-4 top-4 w-5 h-5 text-[color:var(--muted)]" />
                                 <textarea
                                     required
                                     rows={4}
@@ -133,13 +128,12 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                             </div>
                         </div>
 
-                        {/* Location */}
                         <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
+                            <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
                                 Location / Provider
                             </label>
                             <div className="relative">
-                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-grey" />
+                                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[color:var(--muted)]" />
                                 <input
                                     type="text"
                                     className="input-premium pl-12"
@@ -150,13 +144,12 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                             </div>
                         </div>
 
-                        {/* Date */}
                         <div>
-                            <label className="block text-sm font-semibold text-dark-grey mb-2">
+                            <label className="mb-2 block text-sm font-semibold text-[color:var(--ink)]">
                                 Date
                             </label>
                             <div className="relative">
-                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-grey" />
+                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[color:var(--muted)]" />
                                 <input
                                     type="date"
                                     required
@@ -167,9 +160,8 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                             </div>
                         </div>
 
-                        {/* Info Notice */}
-                        <div className="p-4 rounded-lg bg-axels-black/10 border border-axels-black/20">
-                            <p className="text-sm text-axels-black flex items-start gap-2">
+                        <div className="rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4">
+                            <p className="flex items-start gap-2 text-sm text-[color:var(--ink)]">
                                 <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
                                 <span>
                                     This event will be cryptographically hashed and can be optionally
@@ -178,7 +170,6 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                             </p>
                         </div>
 
-                        {/* Submit Button */}
                         <div className="pt-4">
                             <button
                                 type="submit"
@@ -200,7 +191,9 @@ export default function AddEventPage({ params }: { params: { id: string } }) {
                         </div>
                     </form>
                 </div>
-            </div>
+            </main>
+
+            <Footer />
         </div>
     );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import Link from 'next/link';
 import QRCode from 'react-qr-code';
+import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ArrowLeft, Plus, CheckCircle, Clock, Shield, FileText, ExternalLink, Watch as WatchIcon, Upload, Trash2 } from 'lucide-react';
@@ -137,6 +138,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                         <LoadingSpinner />
                     </div>
                 </div>
+                <Footer />
             </div>
         );
     }
@@ -150,6 +152,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                         <p className="text-text-grey">Watch not found</p>
                     </div>
                 </div>
+                <Footer />
             </div>
         );
     }
@@ -160,23 +163,19 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
         <div className="min-h-screen bg-light-grey">
             <Header />
 
-            <div className="max-w-7xl mx-auto px-6 py-12">
-                {/* Back Button */}
+            <main className="max-w-7xl mx-auto px-6 py-12">
                 <Link
                     href="/dashboard"
-                    className="inline-flex items-center gap-2 text-text-grey hover:text-axels-black transition-colors mb-8 font-medium"
+                    className="mb-8 inline-flex items-center gap-2 font-medium text-[color:var(--muted)] transition-colors hover:text-[color:var(--ink)]"
                 >
                     <ArrowLeft className="w-5 h-5" />
                     <span>Back to Dashboard</span>
                 </Link>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column - Watch Info & QR */}
                     <div className="lg:col-span-1 space-y-6">
-                        {/* Watch Info Card */}
                         <div className="card-premium">
-                            {/* Watch Image */}
-                            <div className="relative aspect-square rounded-lg overflow-hidden mb-6 bg-light-grey flex items-center justify-center border border-medium-grey">
+                            <div className="relative mb-6 aspect-square overflow-hidden rounded-[24px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] flex items-center justify-center">
                                 {watch.files && watch.files.length > 0 ? (
                                     <>
                                         <img
@@ -186,7 +185,7 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                                         />
                                         <button
                                             onClick={() => handleImageDelete(watch.files[0].id)}
-                                            className="absolute top-2 right-2 p-2 bg-axels-black text-white rounded-full hover:bg-axels-black/90 transition-colors shadow-lg"
+                                            className="absolute right-3 top-3 rounded-full bg-[color:var(--footer)] p-2 text-white transition-colors shadow-lg hover:bg-[#30241c]"
                                             title="Delete image"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -194,11 +193,11 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                                     </>
                                 ) : (
                                     <>
-                                        <WatchIcon className="w-24 h-24 text-axels-black opacity-30" />
-                                        <label className="absolute inset-0 flex items-center justify-center cursor-pointer hover:bg-black/5 transition-colors">
+                                        <WatchIcon className="w-24 h-24 text-[color:var(--accent-strong)] opacity-30" />
+                                        <label className="absolute inset-0 flex items-center justify-center cursor-pointer transition-colors hover:bg-black/5">
                                             <div className="text-center">
-                                                <Upload className="w-8 h-8 text-axels-black mx-auto mb-2" />
-                                                <p className="text-sm text-axels-black font-medium">Upload Image</p>
+                                                <Upload className="mx-auto mb-2 h-8 w-8 text-[color:var(--accent-strong)]" />
+                                                <p className="text-sm font-medium text-[color:var(--ink)]">Upload Image</p>
                                             </div>
                                             <input
                                                 type="file"
@@ -217,45 +216,42 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                                 )}
                             </div>
 
-                            {/* Watch Details */}
-                            <h1 className="text-3xl font-bold text-black mb-2">
+                            <h1 className="mb-2 text-[color:var(--ink)]">
                                 {watch.brand}
                             </h1>
-                            <p className="text-xl text-text-grey mb-6">{watch.model}</p>
+                            <p className="mb-6 text-xl text-[color:var(--muted)]">{watch.model}</p>
 
-                            {/* Metadata */}
                             <div className="space-y-4">
-                                <div className="p-4 rounded-lg bg-light-grey border border-medium-grey">
-                                    <span className="block text-xs text-text-grey uppercase tracking-wider mb-1 font-medium">
+                                <div className="rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4">
+                                    <span className="mb-1 block text-xs font-medium uppercase tracking-[0.24em] text-[color:var(--muted)]">
                                         Serial Hash
                                     </span>
-                                    <span className="font-mono text-xs text-dark-grey break-all">
+                                    <span className="break-all font-mono text-xs text-[color:var(--ink)]">
                                         {watch.serialNumberHash}
                                     </span>
                                 </div>
-                                <div className="p-4 rounded-lg bg-light-grey border border-medium-grey">
-                                    <span className="block text-xs text-text-grey uppercase tracking-wider mb-1 font-medium">
+                                <div className="rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4">
+                                    <span className="mb-1 block text-xs font-medium uppercase tracking-[0.24em] text-[color:var(--muted)]">
                                         Public ID
                                     </span>
-                                    <span className="font-mono text-xs text-dark-grey">
+                                    <span className="font-mono text-xs text-[color:var(--ink)]">
                                         {watch.publicId}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* QR Code Card */}
                         <div className="card-blue text-center">
-                            <h3 className="text-lg font-bold text-axels-black mb-4">
+                            <h3 className="mb-4 text-[color:var(--ink)]">
                                 Digital Passport QR
                             </h3>
-                            <div className="inline-block p-4 bg-white rounded-xl">
+                            <div className="inline-block rounded-[24px] bg-white p-4">
                                 <QRCode value={publicUrl} size={180} />
                             </div>
                             <Link
                                 href={`/p/${watch.publicId}`}
                                 target="_blank"
-                                className="inline-flex items-center gap-2 mt-4 text-sm text-axels-black hover:text-axels-black-dark transition-colors font-medium"
+                                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[color:var(--accent-strong)] transition-colors hover:text-[color:var(--ink)]"
                             >
                                 <span>View Public Passport</span>
                                 <ExternalLink className="w-4 h-4" />
@@ -263,17 +259,15 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                         </div>
                     </div>
 
-                    {/* Right Column - Timeline */}
                     <div className="lg:col-span-2">
                         <div className="card-premium min-h-[600px]">
-                            {/* Timeline Header */}
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 pb-6 border-b border-medium-grey">
+                            <div className="mb-8 flex flex-col gap-4 border-b border-[color:var(--line)] pb-6 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-black mb-1">
+                                    <h2 className="mb-1 text-[color:var(--ink)]">
                                         History Timeline
                                     </h2>
-                                    <p className="text-text-grey text-sm">
-                                        Track all events and activities for this timepiece
+                                    <p className="text-sm text-[color:var(--muted)]">
+                                        Track all events and activities for this timepiece.
                                     </p>
                                 </div>
                                 <Link href={`/watches/${watch.id}/add-event`} className="btn-primary">
@@ -284,35 +278,32 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                                 </Link>
                             </div>
 
-                            {/* Timeline */}
                             {watch.events.length === 0 ? (
                                 <div className="text-center py-12">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-axels-black/10 mb-4">
-                                        <Clock className="w-8 h-8 text-axels-black" />
+                                    <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-[color:var(--surface-strong)]">
+                                        <Clock className="w-8 h-8 text-[color:var(--accent-strong)]" />
                                     </div>
-                                    <p className="text-text-grey">No events recorded yet</p>
+                                    <p className="text-[color:var(--muted)]">No events recorded yet</p>
                                 </div>
                             ) : (
-                                <div className="relative border-l-2 border-axels-black ml-4 space-y-8">
+                                <div className="relative ml-4 space-y-8 border-l-2 border-[color:var(--accent-soft)]">
                                     {watch.events.map((event) => {
                                         const payload = JSON.parse(event.payloadJson);
                                         return (
                                             <div key={event.id} className="relative ml-8">
-                                                {/* Timeline Dot */}
-                                                <div className="absolute -left-[37px] flex items-center justify-center w-8 h-8 rounded-full bg-axels-black border-4 border-white shadow-md">
+                                                <div className="absolute -left-[37px] flex h-8 w-8 items-center justify-center rounded-full border-4 border-[color:var(--surface)] bg-[color:var(--accent-strong)] shadow-md">
                                                     <div className="text-white">
                                                         {eventIcons[event.eventType] || <FileText className="w-4 h-4" />}
                                                     </div>
                                                 </div>
 
-                                                {/* Event Card */}
-                                                <div className="bg-white border border-medium-grey rounded-xl p-6 hover:shadow-capital transition-all">
-                                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                                                <div className="rounded-[24px] border border-[color:var(--line)] bg-[color:var(--surface)] p-6 transition-all hover:shadow-capital">
+                                                    <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                                         <div>
-                                                            <h3 className="text-xl font-bold text-black mb-1">
+                                                            <h3 className="mb-1 text-[color:var(--ink)]">
                                                                 {event.eventType}
                                                             </h3>
-                                                            <time className="text-sm text-text-grey">
+                                                            <time className="text-sm text-[color:var(--muted)]">
                                                                 {new Date(event.timestamp).toLocaleDateString('en-US', {
                                                                     year: 'numeric',
                                                                     month: 'long',
@@ -337,14 +328,13 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                                                         </div>
                                                     </div>
 
-                                                    {/* Event Details */}
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                         {Object.entries(payload).map(([key, value]) => (
-                                                            <div key={key} className="p-3 rounded-lg bg-light-grey">
-                                                                <span className="block text-xs text-text-grey uppercase tracking-wider mb-1 font-medium">
+                                                            <div key={key} className="rounded-[18px] bg-[color:var(--surface-strong)] p-3">
+                                                                <span className="mb-1 block text-xs font-medium uppercase tracking-[0.22em] text-[color:var(--muted)]">
                                                                     {key}
                                                                 </span>
-                                                                <span className="text-sm text-dark-grey">
+                                                                <span className="text-sm text-[color:var(--ink)]">
                                                                     {String(value)}
                                                                 </span>
                                                             </div>
@@ -359,7 +349,9 @@ export default function WatchDetailPage({ params }: { params: { id: string } }) 
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
+
+            <Footer />
         </div>
     );
 }
