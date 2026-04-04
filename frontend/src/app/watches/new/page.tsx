@@ -13,7 +13,7 @@ import { useWatchStore } from '@/stores/useWatchStore';
 import { getErrorMessage } from '@/lib/errors';
 
 export default function NewWatchPage() {
-    const { isLoaded, isSignedIn } = useAuth();
+    const { getToken, isLoaded, isSignedIn } = useAuth();
     const [brand, setBrand] = useState('');
     const [model, setModel] = useState('');
     const [serialNumber, setSerialNumber] = useState('');
@@ -92,9 +92,11 @@ export default function NewWatchPage() {
                 formData.append('image', image);
             }
 
+            const clerkToken = isSignedIn ? await getToken() : null;
             const res = await api.post('/watches', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    ...(clerkToken ? { Authorization: `Bearer ${clerkToken}` } : {}),
                 },
             });
             addWatch({

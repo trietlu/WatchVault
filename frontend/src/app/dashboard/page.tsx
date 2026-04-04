@@ -27,8 +27,8 @@ export default function DashboardPage() {
             return;
         }
 
-        const token = localStorage.getItem('token');
-        if (!token && !isSignedIn) {
+        const legacyToken = localStorage.getItem('token');
+        if (!legacyToken && !isSignedIn) {
             setAuthChecked(true);
             router.replace('/login');
             return;
@@ -37,7 +37,7 @@ export default function DashboardPage() {
         const fetchWatches = async () => {
             setLoading(true);
             try {
-                const clerkToken = !token && isSignedIn ? await getToken() : null;
+                const clerkToken = isSignedIn ? await getToken() : null;
                 const res = await api.get('/watches', clerkToken
                     ? {
                         headers: {
