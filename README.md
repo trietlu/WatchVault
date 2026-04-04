@@ -1,248 +1,144 @@
 # WatchVault
 
-A blockchain-secured digital passport system for luxury watches. WatchVault allows watch owners to create immutable records of their timepieces, track service history, and maintain provenance through blockchain technology.
+WatchVault is a digital passport platform for luxury watches. It combines a Next.js web app, an Express API, a shared Neon Postgres database, Clerk-backed web authentication, and optional blockchain anchoring for provenance events.
 
 ## Features
 
-- 🔐 **Blockchain-Secured Records** - Immutable watch provenance on Ethereum
-- 👤 **Social Login** - Google and Facebook OAuth integration
-- 📸 **Image Upload** - Optional watch images (max 8MB)
-- 📱 **QR Code Access** - Public digital passports via QR codes
-- 📜 **Event Timeline** - Track service, authentication, and transfer events
-- 🎨 **Modern UI** - Capital One-inspired design system
+- Blockchain-secured watch provenance on Ethereum
+- Clerk-backed web authentication with legacy email/password and OAuth API paths still present in the backend
+- Watch collection management with public passport URLs and QR codes
+- Event timeline for service, authentication, transfer, and note records
+- Optional image upload support
+- Web, native, and smart contract code in one repository
+
+## Current Architecture
+
+WatchVault is one codebase with separate runtime surfaces:
+
+- Frontend web app: Next.js
+- Backend API: Express + TypeScript
+- Database: Neon Postgres via Prisma
+- Authentication: shared Clerk application for the hosted web app
+- Smart contracts: optional Hardhat/Solidity package
+
+Current hosted domains:
+
+- Frontend production: `https://mywatchvault.app`
+- Frontend preview example: `https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+- Backend production: `https://api.mywatchvault.app`
+
+Important deployment notes:
+
+- The frontend and backend are deployed as separate Vercel projects.
+- Vercel `Production` and `Preview` are separate deployment contexts even when they run the same code.
+- In the current setup, preview and production intentionally share the same Clerk and Neon environment.
+- The backend currently stores uploads on local disk in development and in Vercel `/tmp` at runtime. `/tmp` is ephemeral and is not durable object storage.
 
 ## Tech Stack
 
 ### Frontend
-- **Next.js 14** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
-- **Axios** - HTTP client
-- **React OAuth** - Google/Facebook authentication
+
+- Next.js App Router
+- TypeScript
+- Tailwind CSS
+- Axios
+- Clerk
+- Zustand
 
 ### Backend
-- **Node.js** - Runtime environment
-- **Express** - Web framework
-- **TypeScript** - Type-safe development
-- **Prisma** - ORM with SQLite database
-- **Multer** - File upload handling
-- **JWT** - Authentication tokens
+
+- Node.js
+- Express
+- TypeScript
+- Prisma
+- Neon Postgres
+- Multer
+- JWT plus Clerk token verification
 
 ### Smart Contracts
-- **Hardhat** - Ethereum development environment
-- **Solidity** - Smart contract language
-- **Ethers.js** - Blockchain interaction
+
+- Hardhat
+- Solidity
+- Ethers.js
 
 ## Prerequisites
 
-- **Node.js** 18+ and npm
-- **Git**
-- Google Cloud Console account (for Google OAuth)
-- Facebook Developer account (for Facebook OAuth)
+- Node.js 18+ and npm
+- Git
+- Neon project and database
+- Clerk application
+- Vercel account if you want the hosted topology
 
 ## Setup Instructions
 
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/trietlu/WatchVault.git
 cd WatchVault
 ```
 
-### 2. Backend Setup
+### 2. Backend setup
 
 ```bash
 cd backend
-
-# Install dependencies
 npm install
-
-# Set up environment variables
 cp .env.example .env
-# Edit .env and add your configuration
+```
 
-# Initialize database
-npx prisma generate
-npx prisma migrate dev
+Set the backend environment variables in `backend/.env`, then run:
 
-# Start development server
+```bash
+npm run prisma:generate
+npm run prisma:push
 npm run dev
 ```
 
-The backend will run on `http://localhost:3001`
+The backend runs on `http://localhost:3001`.
 
-### 3. Database Setup
-
-The application uses SQLite with Prisma ORM. The database schema is already defined in `backend/prisma/schema.prisma`.
-
-#### Database Schema Overview
-
-The schema includes four main models:
-- **User** - User accounts with email/password and OAuth support
-- **Watch** - Watch records with brand, model, and serial number hash
-- **WatchEvent** - Timeline events (MINT, SERVICE, TRANSFER, AUTH)
-- **FileRecord** - Uploaded watch images
-
-#### Initialize the Database
-
-```bash
-cd backend
-
-# Generate Prisma Client (creates TypeScript types)
-npx prisma generate
-
-# Create the database and run migrations
-npx prisma migrate dev --name init
-
-# (Optional) View database in Prisma Studio
-npx prisma studio
-```
-
-#### Understanding Prisma Commands
-
-- **`npx prisma generate`** - Generates TypeScript client from schema
-- **`npx prisma migrate dev`** - Creates migration and applies to database
-- **`npx prisma studio`** - Opens GUI to view/edit database (http://localhost:5555)
-- **`npx prisma db push`** - Pushes schema changes without creating migration (for prototyping)
-
-#### Database File Location
-
-The SQLite database is created at:
-```
-backend/prisma/dev.db
-```
-
-This file is excluded from Git via `.gitignore`.
-
-#### Resetting the Database
-
-If you need to start fresh:
-
-```bash
-cd backend
-
-# Delete the database file
-rm prisma/dev.db
-
-# Recreate and migrate
-npx prisma migrate dev --name init
-```
-
-#### Viewing the Schema
-
-The complete schema is in `backend/prisma/schema.prisma`:
-
-```prisma
-model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  passwordHash String?
-  googleId     String?  @unique
-  facebookId   String?  @unique
-  createdAt    DateTime @default(now())
-  watches      Watch[]
-}
-
-model Watch {
-  id               Int          @id @default(autoincrement())
-  ownerId          Int
-  owner            User         @relation(fields: [ownerId], references: [id])
-  serialNumberHash String       @unique
-  brand            String
-  model            String
-  publicId         String       @unique @default(uuid())
-  qrCodeUrl        String?
-  createdAt        DateTime     @default(now())
-  events           WatchEvent[]
-  files            FileRecord[]
-}
-
-model WatchEvent {
-  id          Int          @id @default(autoincrement())
-  watchId     Int
-  watch       Watch        @relation(fields: [watchId], references: [id])
-  eventType   String
-  payloadJson String
-  payloadHash String
-  txHash      String?
-  blockNumber Int?
-  timestamp   DateTime     @default(now())
-  files       FileRecord[]
-}
-
-model FileRecord {
-  id        Int         @id @default(autoincrement())
-  watchId   Int?
-  watch     Watch?      @relation(fields: [watchId], references: [id])
-  eventId   Int?
-  event     WatchEvent? @relation(fields: [eventId], references: [id])
-  url       String
-  type      String
-  createdAt DateTime    @default(now())
-}
-```
-
-### 4. Frontend Setup
+### 3. Frontend setup
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Set up environment variables
 cp .env.local.example .env.local
-# Edit .env.local and add your OAuth credentials:
-# NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
-# NEXT_PUBLIC_FACEBOOK_APP_ID=your_facebook_app_id
-
-# Start development server
 npm run dev
 ```
 
-The frontend will run on `http://localhost:3000`
+The frontend runs on `http://localhost:3000`.
 
-### 4. Smart Contracts Setup (Optional)
+### 4. Smart contracts setup (optional)
 
 ```bash
 cd contracts
-
-# Install dependencies
 npm install
-
-# Compile contracts
 npx hardhat compile
-
-# Deploy to local network
 npx hardhat node
-# In another terminal:
+```
+
+In another terminal:
+
+```bash
 npx hardhat run scripts/deploy.js --network localhost
 ```
 
-## OAuth Setup
+## Authentication Setup
 
-### Google OAuth
+Clerk is the primary authentication surface for the hosted web app.
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add authorized redirect URI: `http://localhost:3000`
-6. Copy Client ID to `frontend/.env.local`
+Minimum web auth configuration:
 
-### Facebook OAuth
+- Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in `frontend/.env.local`
+- Set `CLERK_SECRET_KEY` in `backend/.env`
+- Keep frontend and backend pointed at the same Clerk application if you expect the same users and sessions to work across environments
 
-1. Go to [Facebook Developers](https://developers.facebook.com)
-2. Create a new app
-3. Add Facebook Login product
-4. Configure OAuth redirect URIs: `http://localhost:3000`
-5. Copy App ID to `frontend/.env.local`
+The backend still contains legacy JWT and provider-specific auth endpoints for compatibility, but the current web deployment expects Clerk to be the main login path.
 
 ## Running the Application
 
-### Development Mode
+### Local development
 
-Start all services in separate terminals:
+Start the services in separate terminals:
 
 ```bash
 # Terminal 1 - Backend
@@ -258,9 +154,19 @@ cd contracts
 npx hardhat node
 ```
 
-Access the application at `http://localhost:3000`
+Open `http://localhost:3000`.
 
-### Production Build
+### Hosted mode
+
+The intended hosted topology is:
+
+- Web UI on `mywatchvault.app`
+- API on `api.mywatchvault.app`
+- Branch previews on Vercel preview URLs
+
+The frontend discovers the backend through `NEXT_PUBLIC_API_BASE_URL`. If that value points at a dead host, the UI can appear empty because the upstream API requests fail.
+
+### Local production-style builds
 
 ```bash
 # Backend
@@ -274,124 +180,192 @@ npm run build
 npm start
 ```
 
-## Project Structure
+## Vercel Setup
 
-```
-WatchVault/
-├── backend/              # Node.js/Express API
-│   ├── prisma/          # Database schema and migrations
-│   ├── src/
-│   │   ├── controllers/ # Request handlers
-│   │   ├── routes/      # API routes
-│   │   ├── middleware/  # Auth, upload, etc.
-│   │   └── config/      # Configuration files
-│   └── uploads/         # User-uploaded images
-├── frontend/            # Next.js application
-│   ├── src/
-│   │   ├── app/        # App router pages
-│   │   ├── components/ # React components
-│   │   └── lib/        # Utilities and API client
-│   └── public/         # Static assets
-└── contracts/          # Ethereum smart contracts
-    ├── contracts/      # Solidity files
-    └── scripts/        # Deployment scripts
-```
+The hosted deployment is intentionally split into separate frontend and backend Vercel projects:
 
-## API Endpoints
+- The frontend project serves the Next.js app on the public web domain.
+- The backend project serves the Express API on `api.mywatchvault.app`.
+- Frontend and backend can be redeployed independently.
 
-### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Email/password login
-- `POST /auth/google` - Google OAuth login
-- `POST /auth/facebook` - Facebook OAuth login
+Repo-local and local-only Vercel/Codex wiring:
 
-### Watches
-- `POST /watches` - Create new watch (with optional image)
-- `GET /watches` - Get user's watches
-- `GET /watches/:id` - Get watch details
-- `POST /watches/:id/images` - Upload watch image
-- `DELETE /watches/:id/images/:fileId` - Delete watch image
-- `POST /watches/:id/events` - Add event to watch
+- `.codex/config.toml`: repo-local Codex MCP configuration
+- `frontend/.vercel/project.json`: local link between `frontend/` and the frontend Vercel project
+- `backend/.vercel/project.json`: local link between `backend/` and the backend Vercel project
 
-### Public
-- `GET /passports/:publicId` - Get public watch passport
-
-## Testing
-
-Currently, the application uses manual testing. To test:
-
-1. **Registration/Login**
-   - Create account at `/register`
-   - Login with email/password or OAuth
-
-2. **Watch Creation**
-   - Navigate to "Add Watch"
-   - Fill in brand, model, serial number
-   - Optionally upload an image
-   - Submit to create watch
-
-3. **Image Management**
-   - View watch detail page
-   - Upload image if none exists
-   - Delete existing image
-
-4. **Event Timeline**
-   - Add events to watch
-   - View event history
-   - Check blockchain anchoring status
+`*.vercel/project.json` files are local linkage metadata. Commit them only if you intentionally want reproducible repo-local Vercel linkage and your ignore rules allow it.
 
 ## Environment Variables
 
-### Backend (.env)
-```
+### Backend (`backend/.env`)
+
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@POOLER-HOST/DBNAME?sslmode=require"
+DIRECT_URL="postgresql://USER:PASSWORD@DIRECT-HOST/DBNAME?sslmode=require"
+HOST=0.0.0.0
 PORT=3001
-DATABASE_URL="file:./dev.db"
 JWT_SECRET=replace-with-a-long-random-secret
 API_BASE_URL="http://localhost:3001"
 APP_BASE_URL="http://localhost:3000"
+CLERK_SECRET_KEY=""
 UPLOADS_DIR="uploads"
 BLOCKCHAIN_ENABLED="false"
-# Optional when BLOCKCHAIN_ENABLED=true
 CHAIN_RPC_URL="http://127.0.0.1:8545"
 CHAIN_PRIVATE_KEY=""
 CHAIN_CONTRACT_ADDRESS=""
 ```
 
-### Frontend (.env.local)
-```
+Notes:
+
+- `DATABASE_URL` is the pooled Neon connection used by the runtime.
+- `DIRECT_URL` is the direct Neon connection used by Prisma CLI workflows.
+- `APP_BASE_URL` should match the frontend origin.
+- `API_BASE_URL` should match the public API origin.
+- `CLERK_SECRET_KEY` is required when the backend needs to verify Clerk tokens.
+
+### Frontend (`frontend/.env.local`)
+
+```bash
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=""
 NEXT_PUBLIC_API_BASE_URL="http://localhost:3001"
 NEXT_PUBLIC_APP_BASE_URL="http://localhost:3000"
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
-NEXT_PUBLIC_FACEBOOK_APP_ID=your_facebook_app_id
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=""
+NEXT_PUBLIC_FACEBOOK_APP_ID=""
 ```
+
+Notes:
+
+- `NEXT_PUBLIC_API_BASE_URL` is the single most important frontend runtime setting. It determines which API host the app calls.
+- `NEXT_PUBLIC_APP_BASE_URL` is used for public passport URL generation and other app-origin-aware features.
+- The Google and Facebook IDs remain available for app compatibility, but Clerk is the primary hosted auth surface.
+
+### Hosted Vercel environments
+
+The hosted frontend and backend each have their own Vercel environment variables.
+
+Expected production alignment:
+
+- Frontend production:
+  - `NEXT_PUBLIC_APP_BASE_URL` should match the public web host
+  - `NEXT_PUBLIC_API_BASE_URL` should match `https://api.mywatchvault.app`
+- Backend production:
+  - `APP_BASE_URL` should match the frontend origin
+  - `API_BASE_URL` should match `https://api.mywatchvault.app`
+
+Preview note:
+
+- Frontend preview deployments are separate Vercel environments, but in the current setup they intentionally share the same Clerk and Neon infrastructure as production.
+
+## MCP-First Operations
+
+This repo is intended to be operated through MCP-backed automation when possible instead of manually editing vendor consoles.
+
+Preferred workflow:
+
+- Use Codex plus **Vercel MCP** to inspect deployments, domains, logs, and environment variables, and to redeploy or verify services.
+- Use Codex plus **Neon MCP** to inspect projects and branches, run SQL, compare schemas, and prepare safe migrations.
+- Treat **Clerk** as shared external auth infrastructure and update its app-facing settings through repository changes and Vercel environment variables first. Use the Clerk dashboard only when the same capability is not exposed through the active toolchain.
+
+This keeps infrastructure changes more reproducible, reviewable, and easier to document than ad hoc console edits.
+
+## Project Structure
+
+```text
+WatchVault/
+├── .codex/               # Repo-local Codex/MCP configuration
+├── backend/              # Express API
+│   ├── api/              # Vercel API entrypoint
+│   ├── prisma/           # Database schema and migrations
+│   ├── src/
+│   │   ├── config/       # Runtime configuration
+│   │   ├── controllers/  # Request handlers
+│   │   ├── middleware/   # Auth, upload, etc.
+│   │   ├── routes/       # API routes
+│   │   └── lib/          # Shared backend helpers
+│   ├── uploads/          # Local development uploads
+│   └── vercel.json       # Backend Vercel routing config
+├── frontend/             # Next.js application
+│   ├── .vercel/          # Local Vercel project link
+│   ├── public/           # Static assets
+│   └── src/
+│       ├── app/          # App Router pages
+│       ├── components/   # Shared UI components
+│       ├── lib/          # API client and config
+│       └── stores/       # Client state
+├── native/               # React Native app
+└── contracts/            # Ethereum smart contracts
+```
+
+## API Endpoints
+
+### Authentication
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/google`
+- `POST /auth/facebook`
+
+### Watches
+
+- `POST /watches`
+- `GET /watches`
+- `GET /watches/:id`
+- `POST /watches/:id/images`
+- `DELETE /watches/:id/images/:fileId`
+- `POST /watches/:id/events`
+
+### Public
+
+- `GET /passports/:publicId`
+- `GET /health`
+
+## Testing
+
+The repo currently relies mostly on manual and integration-style verification.
+
+Suggested checks:
+
+1. Sign in through the hosted or local web app.
+2. Confirm the frontend is calling the intended API host.
+3. Verify the backend resolves the same user in Neon.
+4. Create a watch and confirm it appears in the collection.
+5. Open the public passport URL and verify the event timeline.
 
 ## Troubleshooting
 
-### Backend won't start
-- Check if port 3001 is available
-- Ensure database is initialized: `npx prisma generate`
-- Verify `.env` file exists with correct values
+### Backend will not start
 
-### Frontend won't start
-- Check if port 3000 is available
-- Ensure `.env.local` exists (OAuth keys are optional for basic functionality)
-- Clear `.next` folder and rebuild: `rm -rf .next && npm run dev`
+- Confirm `DATABASE_URL` points at a reachable Postgres/Neon database.
+- Generate the Prisma client with `npm run prisma:generate`.
+- Verify `backend/.env` exists and contains a valid `JWT_SECRET`.
+
+### Frontend will not start
+
+- Confirm `frontend/.env.local` exists.
+- Verify `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is set for Clerk-backed login.
+- Clear `.next` and retry if the build cache is stale.
+
+### Hosted app shows an empty collection
+
+- Verify `NEXT_PUBLIC_API_BASE_URL` points at the live backend.
+- Confirm the backend is healthy at `/health`.
+- Confirm the signed-in account maps to a user row that actually owns watches in Neon.
 
 ### Image upload fails
-- Verify `backend/uploads/watches` directory exists
-- Check file size is under 8MB
-- Ensure file type is JPEG, PNG, or WebP
 
-### OAuth login not working
-- Verify OAuth credentials in `.env.local`
-- Check redirect URIs in Google/Facebook console
-- Ensure backend is running on port 3001
+- Verify `backend/uploads/watches` exists in local development.
+- Confirm the file is under the 8 MB limit and uses an allowed image format.
+- On Vercel, remember uploads currently land in `/tmp` and are not durable.
+
+### Auth behaves differently between preview and production
+
+- Check the Vercel environment values for frontend and backend separately.
+- Remember that preview and production are separate Vercel environments even if they currently share one Clerk and Neon environment.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
+1. Create a feature branch.
+2. Make the code and doc changes together when you change infrastructure or environment behavior.
+3. Verify the local and hosted configuration still match the documentation.
+4. Open a pull request.

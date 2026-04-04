@@ -1,18 +1,22 @@
 # WatchVault Architecture
 
 ## 1. Purpose
-This document defines the current WatchVault architecture and the target architecture for expanding the product to React Native and iOS clients. It covers:
+
+This document defines the current WatchVault architecture and operating model. It covers:
+
 - System components and responsibilities
 - Data model and API boundaries
 - End-to-end data flow for core user journeys
-- Security, deployment, and scale considerations
+- Security, deployment, environment, and scale considerations
 
 ## 2. Product Context
+
 WatchVault is a digital passport platform for luxury watches. It lets users:
-- Register/login (email/password, Google, Facebook)
-- Create a watch record with hashed serial number
-- Add lifecycle events (service, transfer, authentication, notes)
-- Upload a watch image
+
+- Authenticate into the platform
+- Create a watch record with a hashed serial number
+- Add lifecycle events such as service, transfer, authentication, and notes
+- Upload watch images
 - Share a public passport via QR URL
 - Optionally anchor event hashes to Ethereum
 
@@ -21,19 +25,27 @@ WatchVault is a digital passport platform for luxury watches. It lets users:
 ```text
 Clients
   - Web App (Next.js)
-  - Mobile App (Target: React Native and/or Native iOS)
+  - Mobile App (React Native / Expo)
            |
-           | HTTPS (REST + JWT)
+           | HTTPS
            v
-Backend API (Node.js + Express + TypeScript)
+Frontend Hosting (Vercel, web only)
+  - Production: mywatchvault.app
+  - Preview: branch-specific Vercel URL
+           |
+           | NEXT_PUBLIC_API_BASE_URL
+           v
+Backend API (Node.js + Express + TypeScript, separate Vercel project)
   - Auth routes/controllers
   - Watch routes/controllers
   - Public passport route/controller
   - File upload route/controller
            |
-           +--> Prisma ORM --> SQLite (current) / Postgres (target prod)
+           +--> Prisma ORM --> Neon Postgres (shared)
            |
-           +--> Local file storage (current) / Object storage (target prod)
+           +--> Clerk token verification and user lookup
+           |
+           +--> Local uploads in dev / Vercel /tmp in hosted runtime
            |
            +--> EVM RPC via ethers.js (optional blockchain anchoring)
 ```
@@ -41,31 +53,35 @@ Backend API (Node.js + Express + TypeScript)
 ## 4. Current Codebase Components
 
 ### 4.1 Frontend (Web, Next.js App Router)
+
 Location: `frontend/src`
 
 - `app/`
   - Public pages: `/` and `/p/[publicId]`
-  - Auth pages: `/login`, `/register`
-  - Authenticated pages: `/dashboard`, `/watches/new`, `/watches/[id]`, `/watches/[id]/add-event`
+  - Auth-related routes and gated pages such as `/dashboard`, `/watches/new`, `/watches/[id]`, and `/watches/[id]/add-event`
 - `components/`
-  - Shared UI (Header, cards, OAuth buttons, loading/empty states)
+  - Shared UI, auth controls, watch cards, and loading states
 - `stores/`
-  - `useAuthStore.ts` (persisted auth/session)
-  - `useWatchStore.ts` (watch list/detail cache)
+  - `useAuthStore.ts`
+  - `useWatchStore.ts`
 - `lib/`
-  - `api.ts` Axios client + auth header interceptor
+  - `api.ts` Axios client and auth header handling
   - `config.ts` app/API URL helpers
 
 State and session:
-- JWT token is stored in `localStorage` and Zustand persisted state.
-- Axios request interceptor injects `Authorization: Bearer <token>`.
+
+- Clerk is the primary web session source.
+- Legacy JWT state still exists for backward compatibility and non-Clerk flows.
+- The frontend prefers Clerk bearer tokens when present and only falls back to older persisted tokens when needed.
 
 ### 4.2 Backend (Express API)
+
 Location: `backend/src`
 
 - Entry and app wiring:
-  - `index.ts` boots server
+  - `index.ts` boots the local dev server
   - `app.ts` configures middleware and route mounts
+  - `../api/index.ts` is the Vercel entrypoint for the hosted API
 - Routes:
   - `auth.routes.ts` -> `/auth/*`
   - `watch.routes.ts` -> `/watches/*`
@@ -77,15 +93,18 @@ Location: `backend/src`
   - `public.controller.ts`
   - `file.controller.ts`
 - Middleware:
-  - `auth.middleware.ts` (JWT validation)
-  - `upload.middleware.ts` (Multer image upload constraints)
+  - `auth.middleware.ts` for JWT validation, Clerk token verification, and local user resolution
+  - `upload.middleware.ts` for Multer image constraints
 - Infra/config:
-  - `config/env.ts` central env parsing/validation
-  - `config/contract.ts` ethers contract client + ABI
+  - `config/env.ts` for env parsing and validation
+  - `config/contract.ts` for blockchain client wiring
+  - `lib/uploads.ts` for runtime-aware upload path handling
 
 ### 4.3 Database and ORM
+
 - Prisma schema: `backend/prisma/schema.prisma`
-- Current datasource: SQLite (`provider = "sqlite"`)
+- Datasource: PostgreSQL
+- Current managed database: shared Neon database
 - Core models:
   - `User`
   - `Watch`
@@ -93,13 +112,15 @@ Location: `backend/src`
   - `FileRecord`
 
 ### 4.4 Smart Contract
+
 Location: `contracts/contracts/WatchRegistry.sol`
 
-- Event-only registry contract
-- Function: `recordEvent(bytes32 watchHash, uint8 eventType, bytes32 payloadHash)`
-- Emits `EventRecorded` event
+- Event registry contract
+- Main function: `recordEvent(bytes32 watchHash, uint8 eventType, bytes32 payloadHash)`
+- Emits `EventRecorded`
 
 ### 4.5 Mobile App (React Native, implemented)
+
 Location: `native/src`
 
 - Framework/runtime:
@@ -107,37 +128,28 @@ Location: `native/src`
   - TypeScript strict mode
 - Navigation:
   - Native stack navigator with split unauthenticated/authenticated stacks
-  - Deep link mapping for `/login`, `/register`, `/dashboard`, watch detail/event routes, and public passport route
+  - Deep link mapping for auth, dashboard, watch detail/event routes, and public passport routes
 - Auth/session state:
   - Zustand persisted store
-  - Token persistence uses Expo SecureStore (`secureStorage`) on device
+  - Secure token persistence through Expo SecureStore
 - API integration:
-  - Shared backend contract via Axios client + Bearer token interceptor
-  - Uses same API resources as web (`/auth/*`, `/watches/*`, `/passports/:publicId`)
-- UI design system:
-  - Shared primitives: `Screen`, `Card`, `PrimaryButton`, `SecondaryButton`
-  - Central color tokens (`background`, `surface`, `text`, `mutedText`, `border`, `primary`, `danger`)
-  - Rounded card-based layout with light theme and muted grayscale palette
-- Branding:
-  - Native app icon/splash/adaptive icon are mapped in `native/app.json`
-  - Auth screens render WatchVault logo (`assets/watchvault-logo-v2.png`)
-- Entry experience:
-  - `HomeScreen` acts as landing page with brand messaging + CTA buttons (`Create Account`, `Sign In`)
-  - Includes public passport lookup input for direct verification
-- OAuth status in native:
-  - Google sign-in hook is implemented (`useGoogleAuth`)
-  - Expo Go is explicitly blocked for Google OAuth in local dev; requires development build (`npm run ios`/`npm run android`)
+  - Uses the same backend resources as web
+- UI system:
+  - Shared primitives such as `Screen`, `Card`, `PrimaryButton`, and `SecondaryButton`
+  - Central color tokens and branded assets
 
 ## 5. API Surface
 
 ### 5.1 Auth
+
 - `POST /auth/register`
 - `POST /auth/login`
 - `POST /auth/google`
 - `POST /auth/facebook`
 
 ### 5.2 Watches
-- `POST /watches` (multipart: brand/model/serialNumber + optional image)
+
+- `POST /watches`
 - `GET /watches`
 - `GET /watches/:id`
 - `POST /watches/:id/events`
@@ -145,212 +157,269 @@ Location: `native/src`
 - `DELETE /watches/:id/images/:fileId`
 
 ### 5.3 Public and Files
+
 - `GET /passports/:publicId`
 - `POST /files/upload`
-- `GET /uploads/*` (static file serving)
+- `GET /uploads/*`
+- `GET /health`
 
 ## 6. Data Model and Domain Rules
 
 ### 6.1 User
+
 - Unique email
-- Can have password auth and/or linked social providers (Google/Facebook)
+- Can support password auth, provider identifiers, and Clerk-based resolution
 
 ### 6.2 Watch
+
 - Owned by one user
 - Raw serial number is never persisted
-- `serialNumberHash` (SHA-256) is stored and unique
-- `publicId` used for public passport URL
+- `serialNumberHash` is stored and unique
+- `publicId` is used for public passport URLs
 
 ### 6.3 WatchEvent
-- Event types: `MINT`, `SERVICE`, `TRANSFER`, `AUTH`, `NOTE`
+
+- Event types include `MINT`, `SERVICE`, `TRANSFER`, `AUTH`, and `NOTE`
 - `payloadJson` and derived `payloadHash` are persisted
-- `txHash` and `blockNumber` populated when blockchain anchoring succeeds
+- `txHash` and `blockNumber` are populated when blockchain anchoring succeeds
 
 ### 6.4 FileRecord
-- Associates uploaded image with watch and/or event
+
+- Associates uploaded images with watches and/or events
 - Current storage URL pattern: `/uploads/watches/<filename>`
+- Storage is durable only in local development today. The hosted Vercel runtime writes uploads to `/tmp`, which is ephemeral.
 
 ## 7. End-to-End Data Flows
 
-### 7.1 Email Registration/Login Flow
+### 7.1 Legacy Email/JWT Flow
+
 1. Client submits credentials to `/auth/register` or `/auth/login`.
-2. Backend validates request and user state, hashes password where needed.
-3. Backend signs JWT (`userId`, 1-day expiry) and returns `{ token, user }`.
-4. Client stores token/user in persisted state (`localStorage` on web, `Expo SecureStore` on native).
-5. Subsequent API requests include Bearer token via Axios interceptor.
+2. Backend validates request and user state.
+3. Backend signs a WatchVault JWT and returns `{ token, user }`.
+4. Client stores token/user in persisted auth state.
+5. Subsequent requests use `Authorization: Bearer <token>`.
 
-### 7.2 OAuth Login Flow (Current Native: Google)
-1. Mobile client starts OAuth via `expo-auth-session` Google provider.
-2. After provider redirect, client extracts access token and calls `POST /auth/google`.
-3. Backend verifies token against Google userinfo API and upserts/links user.
-4. Backend returns WatchVault JWT.
-5. Client stores session in persisted auth store and continues with normal Bearer-authenticated API calls.
-6. In Expo Go local development, Google OAuth is blocked by design and the app instructs users to run a dev build instead.
+### 7.2 Web Login Flow (Current Hosted Path: Clerk)
 
-### 7.3 Create Watch Flow
-1. Authenticated client posts multipart form to `/watches`.
-2. Backend validates owner and required fields.
-3. Backend hashes serial number and enforces uniqueness.
-4. Backend creates `Watch`.
-5. If image provided, backend stores file and inserts `FileRecord`.
-6. Backend generates `qrCodeUrl` for public passport.
-7. Backend inserts initial `MINT` event with hashed payload.
-8. Backend returns created watch payload.
+1. Web client signs in through Clerk.
+2. Clerk issues a session token for the frontend.
+3. The frontend sends that bearer token to the backend API.
+4. `auth.middleware.ts` verifies the Clerk token.
+5. The backend resolves the Clerk user to a local `User` row by primary email.
+6. Authorized watch requests execute under the resolved local user identity.
 
-### 7.4 Add Event + Blockchain Anchoring Flow
+### 7.3 Native Login Flow
+
+1. Native client uses its configured auth flow and receives a usable bearer token or provider payload.
+2. Backend validates the request and returns or accepts a WatchVault token.
+3. Client stores session in native persisted state.
+4. All subsequent requests call the same API resources as the web app.
+
+### 7.4 Create Watch Flow
+
+1. Authenticated client posts multipart form data to `/watches`.
+2. Backend validates ownership and required fields.
+3. Backend hashes the serial number and enforces uniqueness.
+4. Backend creates the `Watch` row.
+5. If an image is provided, backend stores the file and inserts a `FileRecord`.
+6. Backend generates the public passport URL/QR metadata.
+7. Backend inserts the initial `MINT` event.
+8. Backend returns the created watch.
+
+### 7.5 Add Event and Blockchain Anchoring Flow
+
 1. Authenticated client posts `{ eventType, payload }` to `/watches/:id/events`.
 2. Backend verifies watch ownership.
-3. Backend writes event to DB first with payload hash.
-4. If `BLOCKCHAIN_ENABLED=false`: return created event immediately.
-5. If enabled:
-   - Backend calls contract `recordEvent(...)`
-   - Waits for tx receipt
-   - Updates event with `txHash` and `blockNumber`
-6. On chain failure, backend still returns DB event (pending/off-chain state).
+3. Backend persists the event and payload hash.
+4. If `BLOCKCHAIN_ENABLED=false`, backend returns immediately.
+5. If blockchain anchoring is enabled:
+   - Backend calls `recordEvent(...)`
+   - Waits for the receipt
+   - Updates the event with `txHash` and `blockNumber`
+6. If chain submission fails, the off-chain event still exists in the database.
 
-### 7.5 Public Passport View Flow
+### 7.6 Public Passport View Flow
+
 1. Public client requests `/passports/:publicId`.
-2. Backend fetches watch by `publicId` and event timeline.
-3. Serializer strips owner-sensitive/internal fields.
-4. Client displays provenance timeline and blockchain metadata (if present).
+2. Backend fetches the watch and event timeline by `publicId`.
+3. Serializer removes owner-sensitive fields.
+4. Client renders the public provenance timeline.
 
 ## 8. Security and Privacy Architecture
 
 - Authentication:
-  - JWT bearer tokens on protected endpoints
+  - Clerk-backed bearer tokens for the hosted web path
+  - Legacy JWT bearer tokens for compatibility paths
   - Route-level auth middleware
 - Data minimization:
-  - Serial numbers hashed before persistence
-  - Public endpoint excludes owner info and raw event payload JSON
+  - Serial numbers are hashed before persistence
+  - Public endpoints exclude owner data and internal payload details
 - Upload controls:
-  - MIME/extension checks
-  - 8 MB file limit
-- Current security gaps to close for production:
-  - CORS is currently open (`app.use(cors())`)
-  - No token revocation strategy
-  - Local file storage is not cloud-resilient
-  - SQLite is not suitable for horizontal production scale
+  - MIME and extension checks
+  - File size limit
+- Current gaps and tradeoffs:
+  - CORS is still permissive
+  - No explicit token revocation strategy
+  - Hosted upload storage is not durable yet
+  - Preview and production currently share Neon and Clerk, so preview work is not data-isolated
 
 ## 9. Native App Design (Current Implementation)
 
-This section captures the implemented design and interaction model in `native/`.
-
 ### 9.1 Visual Design Language
-- Style direction:
-  - Clean, card-based UI with neutral grayscale palette and high-contrast text
-  - Rounded controls and containers (`radius 10-12`) with subtle borders
-- Tokenized theming:
-  - All core colors are centralized in `src/theme/tokens.ts`
-  - Navigation theme inherits token values for background/card/border consistency
-- Branding application:
-  - WatchVault logo appears on authentication screens
-  - App icon, splash image, and Android adaptive icon are branded in Expo config
+
+- Clean, card-based UI with a neutral grayscale palette
+- Rounded controls and containers
+- Shared theme tokens in `native/src/theme/tokens.ts`
+- WatchVault branding applied to icon, splash, and auth screens
 
 ### 9.2 Information Architecture and Navigation
+
 - Unauthenticated experience:
-  - `Home` landing page
+  - `Home`
   - `Login`
   - `Register`
-  - `PublicPassport` (lookup/view)
+  - `PublicPassport`
 - Authenticated experience:
-  - `Dashboard` (collection list)
-  - `NewWatch` (mint flow)
+  - `Dashboard`
+  - `NewWatch`
   - `WatchDetail`
   - `AddEvent`
-  - `PublicPassport` (shared with unauth flow)
-- Navigation behavior:
-  - Separate stacks for authenticated and unauthenticated users
-  - Hydration gate shows loader until persisted auth state is ready
+  - `PublicPassport`
 
 ### 9.3 Screen-Level Design Patterns
-- `HomeScreen`:
-  - Product value proposition and primary CTAs
-  - Quick public passport verification by public ID
-- Auth screens:
-  - Shared card layout, logo header, concise helper text, error region
-  - Inputs explicitly disable autofill/autocorrect where needed to prevent blocked/yellow autofill states
-- Form interaction:
-  - Primary action button + secondary navigation button hierarchy
-  - Inline validation errors with consistent danger color token
+
+- Landing screen with product message and public passport lookup
+- Shared auth card layout with explicit helper/error states
+- Consistent button hierarchy and inline validation feedback
 
 ### 9.4 Native Auth UX and Platform Constraints
-- Email/password:
-  - Uses backend `/auth/register` and `/auth/login`
-  - Session token persisted via SecureStore-backed Zustand storage
-- Google sign-in:
-  - Implemented through `expo-auth-session` + backend `/auth/google`
-  - Not supported in Expo Go local dev; requires dev build runtime
-- Facebook sign-in:
-  - Backend endpoint exists, but native client does not currently expose Facebook login UI
+
+- Email/password uses backend auth endpoints
+- Google sign-in exists in native flow
+- Expo Go is intentionally unsupported for Google OAuth in local dev
+- Facebook backend support exists, but the native client does not currently expose a first-class Facebook login flow
 
 ### 9.5 Design and Architecture Follow-Ups
-- Optional future visual enhancements:
-  - Introduce custom typefaces (if font files are provided)
-  - Add motion/transition layer for screen entry and card interactions
-- Functional enhancements:
-  - Offline caching and submission queue
-  - Push-notification surfaces for transfer/auth events
-  - Native iOS-specific UX refinements if a dedicated Swift client is pursued
+
+- Optional custom typography and motion layer
+- Offline caching and submission queue
+- Push notification surfaces for watch events
+- Native iOS-specific refinements if a dedicated Swift client is pursued
 
 ## 10. Deployment Architecture
 
 ### 10.1 Current Dev Topology
-- Web frontend: local Next.js dev server
+
+- Web frontend: local Next.js dev server on `:3000`
 - Backend API: local Express on `:3001`
-- DB: local SQLite file
-- Files: local filesystem under uploads dir
+- Database: Neon Postgres
+- Files: local filesystem under the configured uploads directory
 - Blockchain: optional local Hardhat node
 
-### 10.2 Recommended Production Topology
+### 10.2 Current Hosted Topology
+
 - Frontend:
-  - Web on Vercel
-  - Mobile via App Store distribution
+  - Separate Vercel project
+  - Production on `mywatchvault.app`
+  - Preview on branch-specific Vercel domains
 - Backend:
-  - Containerized Express API on managed compute (App Runner/Cloud Run/ECS)
+  - Separate Vercel project
+  - Production on `api.mywatchvault.app`
+  - Hosted through `backend/api/index.ts` plus `backend/vercel.json`
 - Database:
-  - Postgres (managed)
+  - Shared Neon Postgres database
 - Files:
-  - Object storage + CDN
+  - Local disk in development
+  - `/tmp` in the Vercel runtime today
 - Secrets/config:
-  - Managed secret store + environment-specific config
+  - Local env files in development
+  - Vercel environment variables in hosted environments
 - Observability:
-  - Structured logs, request tracing, error tracking, health probes
+  - Vercel deployment/build/runtime logs
+  - `/health` endpoint for basic API health verification
+
+### 10.3 Configuration and Environment Model
+
+- Local development:
+  - Backend reads `backend/.env`
+  - Frontend reads `frontend/.env.local`
+  - Default local origins are `http://localhost:3001` and `http://localhost:3000`
+- Hosted frontend:
+  - `NEXT_PUBLIC_API_BASE_URL` selects the API host
+  - `NEXT_PUBLIC_APP_BASE_URL` selects the public web origin
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` points the web app at Clerk
+- Hosted backend:
+  - `DATABASE_URL` and `DIRECT_URL` point Prisma/runtime at Neon
+  - `APP_BASE_URL` is the expected frontend origin
+  - `API_BASE_URL` is the public API origin
+  - `CLERK_SECRET_KEY` enables server-side Clerk verification
+- Environment separation:
+  - Vercel `Production` and `Preview` are deployment contexts, not separate codebases
+  - In the current setup, preview and production intentionally share one Neon and one Clerk environment
+
+### 10.4 Operational Model: MCP Over Consoles
+
+The preferred operational path is MCP-backed automation through tools like Codex rather than manual vendor-console edits.
+
+- Vercel MCP is used to:
+  - Inspect projects, domains, deployments, logs, and environment variables
+  - Redeploy frontend and backend services
+  - Verify health and domain attachment
+- Neon MCP is used to:
+  - Inspect projects and branches
+  - Run SQL
+  - Compare schemas and prepare safer migrations
+- Clerk-related operations are managed primarily through:
+  - Repository configuration
+  - Vercel environment variables
+  - App-level integration changes
+
+Operational rule:
+
+- Prefer Codex + MCP for repeatable, auditable infrastructure work.
+- Use vendor dashboards only when the same capability is not available through the active automation surface.
 
 ## 11. Scaling and Reliability Plan
 
 - API:
-  - Add pagination/filtering for watch/event lists
+  - Add pagination and filtering for watch/event lists
   - Add rate limiting and abuse protection
 - Data:
-  - Move SQLite -> Postgres for concurrency and durability
-  - Add indexes for `ownerId`, `publicId`, event time ordering
+  - Add indexes for ownership, public ID lookup, and event ordering
 - Files:
-  - Migrate local uploads to object storage
+  - Replace Vercel `/tmp` uploads with durable object storage
 - Background jobs:
-  - Move blockchain anchoring to queue-based async workers for resilience
+  - Move blockchain anchoring to queue-based async workers
+- Environments:
+  - Decide whether preview should continue sharing production-facing Neon/Clerk resources
+  - Add a formal backend preview deployment path if branch-level API testing becomes necessary
 
 ## 12. Architecture Decision Summary
 
-- Keep a single backend API for all clients (web, React Native, iOS).
-- Reuse existing JWT and endpoint contracts to accelerate mobile delivery and preserve parity.
-- Prioritize infrastructure migrations (Postgres + object storage) before public scale.
-- React Native app is now implemented as the primary mobile client; native iOS-only implementation remains optional for deeper platform integration.
+- Keep one backend API for web and native clients.
+- Run frontend and backend as separate Vercel projects so domains and deployment cadence can differ cleanly.
+- Use Neon Postgres plus Prisma as the shared data layer.
+- Use Clerk as the primary hosted web auth path while retaining legacy compatibility routes where needed.
+- Prefer MCP-based operations over manual console changes for reproducibility.
+- Prioritize durable upload storage and tighter environment isolation before public scale.
 
 ## 13. Key File Reference
-- Web entry/layout: `frontend/src/app/layout.tsx`
+
+- Repo-local MCP config: `.codex/config.toml`
+- Web layout: `frontend/src/app/layout.tsx`
 - Web routes: `frontend/src/app/**/page.tsx`
-- API client: `frontend/src/lib/api.ts`
-- Auth state: `frontend/src/stores/useAuthStore.ts`
-- Watch state: `frontend/src/stores/useWatchStore.ts`
+- Web runtime config: `frontend/src/lib/config.ts`
+- Web API client: `frontend/src/lib/api.ts`
+- Frontend env example: `frontend/.env.local.example`
 - API app wiring: `backend/src/app.ts`
-- Watch business logic: `backend/src/controllers/watch.controller.ts`
-- Auth business logic: `backend/src/controllers/auth.controller.ts`
-- Public serializer: `backend/src/serializers/public-passport.ts`
+- Vercel API entrypoint: `backend/api/index.ts`
+- Backend Vercel config: `backend/vercel.json`
+- Auth middleware: `backend/src/middleware/auth.middleware.ts`
+- Watch controller: `backend/src/controllers/watch.controller.ts`
+- Upload path handling: `backend/src/lib/uploads.ts`
 - Prisma schema: `backend/prisma/schema.prisma`
+- Backend env example: `backend/.env.example`
 - Contract: `contracts/contracts/WatchRegistry.sol`
 - Native app config: `native/app.json`
 - Native navigator: `native/src/navigation/AppNavigator.tsx`
-- Native landing screen: `native/src/screens/HomeScreen.tsx`
-- Native auth screens: `native/src/screens/auth/LoginScreen.tsx`, `native/src/screens/auth/RegisterScreen.tsx`
-- Native design tokens: `native/src/theme/tokens.ts`
-- Native auth state storage: `native/src/stores/useAuthStore.ts`, `native/src/lib/storage.ts`
+- Native theme tokens: `native/src/theme/tokens.ts`
