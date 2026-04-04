@@ -32,6 +32,7 @@ export const readEnv = (source: EnvSource) => {
         jwtSecret: requireEnv(source, 'JWT_SECRET'),
         apiBaseUrl: source.API_BASE_URL ?? 'http://localhost:3001',
         appBaseUrl: source.APP_BASE_URL ?? 'http://localhost:3000',
+        clerkSecretKey: optionalEnv(source, 'CLERK_SECRET_KEY'),
         uploadsDir: source.UPLOADS_DIR ?? 'uploads',
         blockchainEnabled,
         chainRpcUrl: optionalEnv(source, 'CHAIN_RPC_URL'),

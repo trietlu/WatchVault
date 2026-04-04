@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from '@clerk/nextjs';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Cormorant_Garamond, Manrope } from 'next/font/google';
+import ClerkTokenBridge from '@/components/ClerkTokenBridge';
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -35,9 +37,12 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={`${cormorant.variable} ${manrope.variable}`}>
-                <GoogleOAuthProvider clientId={googleClientId}>
-                    {children}
-                </GoogleOAuthProvider>
+                <ClerkProvider>
+                    <ClerkTokenBridge />
+                    <GoogleOAuthProvider clientId={googleClientId}>
+                        {children}
+                    </GoogleOAuthProvider>
+                </ClerkProvider>
             </body>
         </html>
     );

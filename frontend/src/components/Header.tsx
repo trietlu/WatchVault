@@ -1,5 +1,7 @@
 'use client';
 
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -9,9 +11,11 @@ import { useAuthStore } from '@/stores/useAuthStore';
 export default function Header() {
     const pathname = usePathname();
     const router = useRouter();
+    const { isSignedIn } = useAuth();
     const { user, isAuthenticated, logout } = useAuthStore();
+    const signedIn = isAuthenticated || isSignedIn;
     const displayName = user?.name?.trim() || user?.email.split('@')[0] || 'Account';
-    const navLinks = isAuthenticated
+    const navLinks = signedIn
         ? [
             { href: '/dashboard', label: 'Collection' },
             { href: '/watches/new', label: 'Mint Passport' },
@@ -74,13 +78,24 @@ export default function Header() {
                         </>
                     ) : (
                         <>
-                            <Link href="/login" className="btn-ghost">
-                                Sign In
-                            </Link>
-                            <Link href="/register" className="btn-primary">
-                                Start Your Vault
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
+                            <Show when="signed-out">
+                                <SignInButton>
+                                    <button type="button" className="btn-ghost">
+                                        Sign In
+                                    </button>
+                                </SignInButton>
+                                <SignUpButton>
+                                    <button type="button" className="btn-primary">
+                                        Start Your Vault
+                                        <ArrowRight className="h-4 w-4" />
+                                    </button>
+                                </SignUpButton>
+                            </Show>
+                            <Show when="signed-in">
+                                <div className="rounded-full border border-[color:var(--line)] bg-[color:var(--surface)] p-1">
+                                    <UserButton />
+                                </div>
+                            </Show>
                         </>
                     )}
                 </div>

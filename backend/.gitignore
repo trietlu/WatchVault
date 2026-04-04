@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Environment variables
 .env
@@ -17,6 +16,11 @@ uploads/
 # Build outputs
 dist/
 build/
+prisma.config.js
+prisma.config.js.map
+prisma.config.d.ts
+prisma.config.d.ts.map
+src/generated/
 
 # Logs
 *.log

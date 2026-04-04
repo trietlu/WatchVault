@@ -1,6 +1,14 @@
 import axios from 'axios';
 import { appConfig } from './config';
 
+type TokenResolver = () => Promise<string | null>;
+
+let tokenResolver: TokenResolver | null = null;
+
+export const setAuthTokenResolver = (resolver: TokenResolver | null) => {
+    tokenResolver = resolver;
+};
+
 const api = axios.create({
     baseURL: appConfig.apiBaseUrl,
     headers: {
@@ -8,11 +16,14 @@ const api = axios.create({
     },
 });
 
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    const authToken = token ?? (tokenResolver ? await tokenResolver() : null);
+
+    if (authToken) {
+        config.headers.Authorization = `Bearer ${authToken}`;
     }
+
     return config;
 });
 

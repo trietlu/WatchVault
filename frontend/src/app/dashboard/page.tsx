@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -14,6 +15,7 @@ import { useWatchStore } from '@/stores/useWatchStore';
 
 export default function DashboardPage() {
     const router = useRouter();
+    const { isLoaded, isSignedIn } = useAuth();
     const [authChecked, setAuthChecked] = useState(false);
     const watches = useWatchStore((state) => state.watches);
     const loading = useWatchStore((state) => state.loading);
@@ -21,8 +23,18 @@ export default function DashboardPage() {
     const setLoading = useWatchStore((state) => state.setLoading);
 
     useEffect(() => {
+        if (!isLoaded) {
+            return;
+        }
+
         const token = localStorage.getItem('token');
         if (!token) {
+            if (isSignedIn) {
+                setLoading(false);
+                setAuthChecked(true);
+                return;
+            }
+
             setAuthChecked(true);
             router.replace('/login');
             return;
@@ -42,7 +54,7 @@ export default function DashboardPage() {
         };
 
         fetchWatches();
-    }, [router, setLoading, setWatches]);
+    }, [isLoaded, isSignedIn, router, setLoading, setWatches]);
 
     if (!authChecked) {
         return (

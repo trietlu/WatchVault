@@ -1,9 +1,13 @@
 'use client';
 
+import { useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@clerk/nextjs';
 import { CheckCircle2, Shield, Watch } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 const collectionMoments = [
     {
@@ -24,6 +28,21 @@ const collectionMoments = [
 ];
 
 export default function Home() {
+    const router = useRouter();
+    const { isLoaded, isSignedIn } = useAuth();
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const hasHydrated = useAuthStore((state) => state.hasHydrated);
+
+    useEffect(() => {
+        if (!isLoaded || !hasHydrated) {
+            return;
+        }
+
+        if (isSignedIn || isAuthenticated) {
+            router.replace('/dashboard');
+        }
+    }, [hasHydrated, isAuthenticated, isLoaded, isSignedIn, router]);
+
     return (
         <div className="min-h-screen">
             <Header />

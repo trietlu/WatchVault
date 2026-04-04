@@ -1,17 +1,20 @@
 'use client';
 
+import { useAuth } from '@clerk/nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 export default function Footer() {
+    const { isSignedIn } = useAuth();
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const signedIn = isAuthenticated || isSignedIn;
     const footerColumns = [
         {
             title: 'Collectors',
             links: [
-                { href: isAuthenticated ? '/dashboard' : '/login', label: 'My Collection' },
-                { href: isAuthenticated ? '/watches/new' : '/register', label: 'Mint a Passport' },
+                { href: signedIn ? '/dashboard' : '/login', label: 'My Collection' },
+                { href: signedIn ? '/watches/new' : '/register', label: 'Mint a Passport' },
             ],
         },
         {

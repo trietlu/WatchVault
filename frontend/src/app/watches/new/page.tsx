@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -12,6 +13,7 @@ import { useWatchStore } from '@/stores/useWatchStore';
 import { getErrorMessage } from '@/lib/errors';
 
 export default function NewWatchPage() {
+    const { isLoaded, isSignedIn } = useAuth();
     const [brand, setBrand] = useState('');
     const [model, setModel] = useState('');
     const [serialNumber, setSerialNumber] = useState('');
@@ -24,15 +26,19 @@ export default function NewWatchPage() {
     const addWatch = useWatchStore((state) => state.addWatch);
 
     useEffect(() => {
+        if (!isLoaded) {
+            return;
+        }
+
         const token = localStorage.getItem('token');
-        if (!token) {
+        if (!token && !isSignedIn) {
             setAuthChecked(true);
             router.replace('/login');
             return;
         }
 
         setAuthChecked(true);
-    }, [router]);
+    }, [isLoaded, isSignedIn, router]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -69,7 +75,7 @@ export default function NewWatchPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!localStorage.getItem('token')) {
+        if (!localStorage.getItem('token') && !isSignedIn) {
             router.replace('/login');
             return;
         }
