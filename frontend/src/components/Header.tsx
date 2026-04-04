@@ -79,12 +79,12 @@ export default function Header() {
                     ) : (
                         <>
                             <Show when="signed-out">
-                                <SignInButton>
+                                <SignInButton mode="modal">
                                     <button type="button" className="btn-ghost">
                                         Sign In
                                     </button>
                                 </SignInButton>
-                                <SignUpButton>
+                                <SignUpButton mode="modal">
                                     <button type="button" className="btn-primary">
                                         Start Your Vault
                                         <ArrowRight className="h-4 w-4" />
