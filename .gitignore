@@ -45,6 +45,13 @@ coverage/
 
 # Misc
 .vercel
+!frontend/.vercel/
+frontend/.vercel/*
+!frontend/.vercel/project.json
+
+# Codex local state
+.codex/*
+!.codex/config.toml
 
 # Native app (Expo / React Native)
 native/.expo/

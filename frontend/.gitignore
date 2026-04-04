@@ -37,6 +37,9 @@ coverage/
 
 # Misc
 .vercel
+!.vercel/
+.vercel/*
+!.vercel/project.json
 
 # clerk configuration (can include secrets)
 /.clerk/
