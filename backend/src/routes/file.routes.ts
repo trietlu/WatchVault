@@ -2,14 +2,9 @@ import { Router } from 'express';
 import multer from 'multer';
 import { uploadFile } from '../controllers/file.controller.js';
 import path from 'path';
-import fs from 'fs';
-import { env } from '../config/env.js';
+import { ensureUploadsDirectory } from '../lib/uploads.js';
 
-// Ensure uploads directory exists
-const uploadDir = env.uploadsDir;
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+const uploadDir = ensureUploadsDirectory();
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

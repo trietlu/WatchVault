@@ -1,16 +1,8 @@
 import multer from 'multer';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-import { env } from '../config/env.js';
+import { ensureUploadsDirectory } from '../lib/uploads.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadDirectory = path.join(__dirname, `../../${env.uploadsDir}/watches`);
-
-if (!fs.existsSync(uploadDirectory)) {
-    fs.mkdirSync(uploadDirectory, { recursive: true });
-}
+const uploadDirectory = ensureUploadsDirectory('watches');
 
 // Configure storage
 const storage = multer.diskStorage({

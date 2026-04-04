@@ -21,6 +21,10 @@ prisma.config.js.map
 prisma.config.d.ts
 prisma.config.d.ts.map
 src/generated/
+api/*.js
+api/*.js.map
+api/*.d.ts
+api/*.d.ts.map
 
 # Logs
 *.log
@@ -38,3 +42,4 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.vercel

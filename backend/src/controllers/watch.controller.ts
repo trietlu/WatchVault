@@ -7,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { env } from '../config/env.js';
 import { buildAbsoluteUrl } from '../lib/url.js';
+import { resolveUploadedFilePath } from '../lib/uploads.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -213,10 +214,7 @@ export const deleteWatchImage = async (req: Request, res: Response) => {
         }
 
         // Delete file from filesystem
-        const relativeFilePath = fileRecord.url.startsWith('/')
-            ? fileRecord.url.slice(1)
-            : fileRecord.url;
-        const filePath = path.join(__dirname, '..', '..', relativeFilePath);
+        const filePath = resolveUploadedFilePath(fileRecord.url);
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }

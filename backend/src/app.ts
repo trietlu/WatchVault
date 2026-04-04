@@ -4,7 +4,7 @@ import authRoutes from './routes/auth.routes.js';
 import watchRoutes from './routes/watch.routes.js';
 import publicRoutes from './routes/public.routes.js';
 import fileRoutes from './routes/file.routes.js';
-import { env } from './config/env.js';
+import { getUploadsRoot } from './lib/uploads.js';
 
 const app = express();
 
@@ -15,7 +15,7 @@ app.use('/auth', authRoutes);
 app.use('/watches', watchRoutes);
 app.use('/passports', publicRoutes);
 app.use('/files', fileRoutes);
-app.use('/uploads', express.static(env.uploadsDir));
+app.use('/uploads', express.static(getUploadsRoot()));
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
