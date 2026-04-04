@@ -15,7 +15,7 @@ import { useWatchStore } from '@/stores/useWatchStore';
 
 export default function DashboardPage() {
     const router = useRouter();
-    const { isLoaded, isSignedIn } = useAuth();
+    const { getToken, isLoaded, isSignedIn } = useAuth();
     const [authChecked, setAuthChecked] = useState(false);
     const watches = useWatchStore((state) => state.watches);
     const loading = useWatchStore((state) => state.loading);
@@ -28,13 +28,7 @@ export default function DashboardPage() {
         }
 
         const token = localStorage.getItem('token');
-        if (!token) {
-            if (isSignedIn) {
-                setLoading(false);
-                setAuthChecked(true);
-                return;
-            }
-
+        if (!token && !isSignedIn) {
             setAuthChecked(true);
             router.replace('/login');
             return;
@@ -43,10 +37,18 @@ export default function DashboardPage() {
         const fetchWatches = async () => {
             setLoading(true);
             try {
-                const res = await api.get('/watches');
+                const clerkToken = !token && isSignedIn ? await getToken() : null;
+                const res = await api.get('/watches', clerkToken
+                    ? {
+                        headers: {
+                            Authorization: `Bearer ${clerkToken}`,
+                        },
+                    }
+                    : undefined);
                 setWatches(res.data);
             } catch (error) {
                 console.error('Failed to fetch watches', error);
+                setWatches([]);
             } finally {
                 setLoading(false);
                 setAuthChecked(true);
@@ -54,7 +56,7 @@ export default function DashboardPage() {
         };
 
         fetchWatches();
-    }, [isLoaded, isSignedIn, router, setLoading, setWatches]);
+    }, [getToken, isLoaded, isSignedIn, router, setLoading, setWatches]);
 
     if (!authChecked) {
         return (
