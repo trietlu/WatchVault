@@ -1,6 +1,6 @@
 # WatchVault
 
-WatchVault is a digital passport platform for luxury watches. It combines a Next.js web app, an Express API, a shared Neon Postgres database, Clerk-backed web authentication, and optional blockchain anchoring for provenance events.
+WatchVault is a digital passport platform for luxury watches. It combines a Next.js web app, an Express API, a Neon Postgres project with separate production and preview branches, Clerk-backed web authentication, and optional blockchain anchoring for provenance events.
 
 ## Features
 
@@ -24,14 +24,17 @@ WatchVault is one codebase with separate runtime surfaces:
 Current hosted domains:
 
 - Frontend production: `https://mywatchvault.app`
-- Frontend preview example: `https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+- Frontend preview branch alias (`newstyle`): `https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+- Frontend preview deployment example: `https://watch-vault-digz9f3d1-trietlus-projects.vercel.app`
 - Backend production: `https://api.mywatchvault.app`
+- Backend preview deployment example: `https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
 
 Important deployment notes:
 
 - The frontend and backend are deployed as separate Vercel projects.
 - Vercel `Production` and `Preview` are separate deployment contexts even when they run the same code.
-- In the current setup, preview and production intentionally share the same Clerk and Neon environment.
+- Preview and production share the same Clerk instance but no longer share the same Neon branch.
+- The frontend project is Git-connected and supports branch-specific preview env overrides. The backend project is not Git-connected, so its preview envs are project-wide within the backend Vercel project.
 - The backend currently stores uploads on local disk in development and in Vercel `/tmp` at runtime. `/tmp` is ephemeral and is not durable object storage.
 
 ## Tech Stack
@@ -252,10 +255,29 @@ Expected production alignment:
 - Backend production:
   - `APP_BASE_URL` should match the frontend origin
   - `API_BASE_URL` should match `https://api.mywatchvault.app`
+  - `DATABASE_URL` and `DIRECT_URL` should point at the production Neon branch
 
 Preview note:
 
-- Frontend preview deployments are separate Vercel environments, but in the current setup they intentionally share the same Clerk and Neon infrastructure as production.
+- Frontend preview for branch `newstyle` uses:
+  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+- Backend preview uses:
+  - `APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+  - `API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+  - `DATABASE_URL` / `DIRECT_URL` pointed at the Neon preview branch
+- Clerk remains shared between preview and production, so the same signed-in Clerk user is resolved against different database branches depending on whether the request goes to production or preview.
+- The frontend preview env override is branch-specific because the frontend Vercel project is Git-connected.
+- The backend preview env is project-wide `Preview` because the backend Vercel project is not Git-connected.
+
+### Neon branch layout
+
+The current Neon project layout is:
+
+- Production branch: existing default production branch
+- Preview branch: `preview` (`br-quiet-recipe-akt7rocp`)
+
+Production backend envs point at the production branch. Preview backend envs point at the preview branch. The preview branch was created from production and then diverges.
 
 ## MCP-First Operations
 

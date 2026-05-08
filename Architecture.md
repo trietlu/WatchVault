@@ -104,7 +104,7 @@ Location: `backend/src`
 
 - Prisma schema: `backend/prisma/schema.prisma`
 - Datasource: PostgreSQL
-- Current managed database: shared Neon database
+- Current managed database: Neon Postgres project with separate production and preview branches
 - Core models:
   - `User`
   - `Watch`
@@ -261,7 +261,7 @@ Location: `native/src`
   - CORS is still permissive
   - No explicit token revocation strategy
   - Hosted upload storage is not durable yet
-  - Preview and production currently share Neon and Clerk, so preview work is not data-isolated
+  - Preview and production still share the same Clerk instance, so auth configuration remains coupled even though database state is now isolated by Neon branch
 
 ## 9. Native App Design (Current Implementation)
 
@@ -322,12 +322,14 @@ Location: `native/src`
   - Separate Vercel project
   - Production on `mywatchvault.app`
   - Preview on branch-specific Vercel domains
+  - Current `newstyle` branch alias: `watch-vault-git-newstyle-trietlus-projects.vercel.app`
 - Backend:
   - Separate Vercel project
   - Production on `api.mywatchvault.app`
   - Hosted through `backend/api/index.ts` plus `backend/vercel.json`
+  - Current preview deployment example: `watch-vault-ghuqcotee-trietlus-projects.vercel.app`
 - Database:
-  - Shared Neon Postgres database
+  - Shared Neon project with separate production and preview branches
 - Files:
   - Local disk in development
   - `/tmp` in the Vercel runtime today
@@ -355,9 +357,40 @@ Location: `native/src`
   - `CLERK_SECRET_KEY` enables server-side Clerk verification
 - Environment separation:
   - Vercel `Production` and `Preview` are deployment contexts, not separate codebases
-  - In the current setup, preview and production intentionally share one Neon and one Clerk environment
+  - Clerk is intentionally shared between production and preview
+  - Neon is now split by branch: production backend uses the production branch and preview backend uses the `preview` branch (`br-quiet-recipe-akt7rocp`)
+  - The frontend project is Git-connected and can use branch-specific preview envs such as `Preview (newstyle)`
+  - The backend project is not Git-connected, so its preview configuration is project-wide within the backend Vercel project rather than branch-specific
 
-### 10.4 Operational Model: MCP Over Consoles
+### 10.4 Current Wiring
+
+- Production frontend:
+  - `NEXT_PUBLIC_API_BASE_URL=https://api.mywatchvault.app`
+  - `NEXT_PUBLIC_APP_BASE_URL=<production frontend origin>`
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<shared Clerk publishable key>`
+- Production backend:
+  - `DATABASE_URL` / `DIRECT_URL` -> production Neon branch
+  - `APP_BASE_URL=<production frontend origin>`
+  - `API_BASE_URL=https://api.mywatchvault.app`
+  - `CLERK_SECRET_KEY=<shared Clerk secret>`
+- Preview frontend for `newstyle`:
+  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<same shared Clerk publishable key>`
+- Preview backend:
+  - `DATABASE_URL` / `DIRECT_URL` -> Neon `preview` branch
+  - `APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+  - `API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+  - `CLERK_SECRET_KEY=<same shared Clerk secret>`
+
+Effectively:
+
+- the same Clerk user can authenticate in both production and preview
+- production resolves that user in the production Neon branch
+- preview resolves that user in the preview Neon branch
+- frontend preview isolation only works because it calls the preview backend instead of `api.mywatchvault.app`
+
+### 10.5 Operational Model: MCP Over Consoles
 
 The preferred operational path is MCP-backed automation through tools like Codex rather than manual vendor-console edits.
 
@@ -391,8 +424,8 @@ Operational rule:
 - Background jobs:
   - Move blockchain anchoring to queue-based async workers
 - Environments:
-  - Decide whether preview should continue sharing production-facing Neon/Clerk resources
-  - Add a formal backend preview deployment path if branch-level API testing becomes necessary
+  - Decide whether preview should continue sharing the production Clerk instance
+  - Add a stable preview API domain or Git-connect the backend Vercel project so backend preview envs can be branch-specific instead of project-wide
 
 ## 12. Architecture Decision Summary
 
