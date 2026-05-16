@@ -24,18 +24,40 @@ WatchVault is one codebase with separate runtime surfaces:
 Current hosted domains:
 
 - Frontend production: `https://mywatchvault.app`
-- Frontend preview branch alias (`newstyle`): `https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
-- Frontend preview deployment example: `https://watch-vault-digz9f3d1-trietlus-projects.vercel.app`
+- Frontend preview branch alias (`staging`): `https://watch-vault-git-staging-trietlus-projects.vercel.app`
+- Frontend preview deployment example: `https://watch-vault-kb7c1y1z3-trietlus-projects.vercel.app`
 - Backend production: `https://api.mywatchvault.app`
-- Backend preview deployment example: `https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+- Backend preview branch alias (`staging`): `https://watch-vault-api-git-staging-trietlus-projects.vercel.app`
+- Backend preview deployment example: `https://watch-vault-sj6g5o8bc-trietlus-projects.vercel.app`
 
 Important deployment notes:
 
 - The frontend and backend are deployed as separate Vercel projects.
 - Vercel `Production` and `Preview` are separate deployment contexts even when they run the same code.
 - Preview and production share the same Clerk instance but no longer share the same Neon branch.
-- The frontend project is Git-connected and supports branch-specific preview env overrides. The backend project is not Git-connected, so its preview envs are project-wide within the backend Vercel project.
+- Both frontend and backend projects are Git-connected and support branch-specific preview env overrides.
 - The backend currently stores uploads on local disk in development and in Vercel `/tmp` at runtime. `/tmp` is ephemeral and is not durable object storage.
+
+## Branch Workflow
+
+WatchVault uses a simple three-lane workflow:
+
+- Short-lived feature branches for isolated work
+- `staging` for integrated preview testing on Vercel
+- `main` for production
+
+Expected flow:
+
+1. Create a short-lived branch from `staging` or `main` for a focused change.
+2. Merge that feature branch into `staging` when it is ready for shared preview testing.
+3. Verify the `staging` frontend and backend previews on Vercel.
+4. Merge `staging` into `main` when the change is ready for production.
+
+What not to do:
+
+- Do not develop directly on `main`.
+- Do not use `staging` as a personal scratch branch.
+- Do not let `staging` drift for long periods without either promoting it to `main` or cleaning it up.
 
 ## Tech Stack
 
@@ -247,28 +269,40 @@ Notes:
 
 The hosted frontend and backend each have their own Vercel environment variables.
 
-Expected production alignment:
+Current environment model:
 
-- Frontend production:
-  - `NEXT_PUBLIC_APP_BASE_URL` should match the public web host
-  - `NEXT_PUBLIC_API_BASE_URL` should match `https://api.mywatchvault.app`
-- Backend production:
-  - `APP_BASE_URL` should match the frontend origin
-  - `API_BASE_URL` should match `https://api.mywatchvault.app`
-  - `DATABASE_URL` and `DIRECT_URL` should point at the production Neon branch
+- Local frontend:
+  - `NEXT_PUBLIC_APP_BASE_URL=http://localhost:3000`
+  - `NEXT_PUBLIC_API_BASE_URL=http://localhost:3001`
+- Local backend:
+  - `APP_BASE_URL=http://localhost:3000`
+  - `API_BASE_URL=http://localhost:3001`
+  - `DATABASE_URL` / `DIRECT_URL` currently point at the Neon preview branch for isolated local testing
+- Production frontend:
+  - `NEXT_PUBLIC_APP_BASE_URL=https://mywatchvault.app`
+  - `NEXT_PUBLIC_API_BASE_URL=https://api.mywatchvault.app`
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<shared Clerk publishable key>`
+- Production backend:
+  - `APP_BASE_URL=https://mywatchvault.app`
+  - `API_BASE_URL=https://api.mywatchvault.app`
+  - `DATABASE_URL` / `DIRECT_URL` -> Neon production branch
+  - `CLERK_SECRET_KEY=<shared Clerk secret>`
+- Preview frontend for branch `staging`:
+  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-staging-trietlus-projects.vercel.app`
+  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-api-git-staging-trietlus-projects.vercel.app`
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<shared Clerk publishable key>`
+- Preview backend for branch `staging`:
+  - `APP_BASE_URL=https://watch-vault-git-staging-trietlus-projects.vercel.app`
+  - `API_BASE_URL=https://watch-vault-api-git-staging-trietlus-projects.vercel.app`
+  - `DATABASE_URL` / `DIRECT_URL` -> Neon preview branch
+  - `CLERK_SECRET_KEY=<shared Clerk secret>`
 
-Preview note:
+Notes:
 
-- Frontend preview for branch `newstyle` uses:
-  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
-  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
-- Backend preview uses:
-  - `APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
-  - `API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
-  - `DATABASE_URL` / `DIRECT_URL` pointed at the Neon preview branch
 - Clerk remains shared between preview and production, so the same signed-in Clerk user is resolved against different database branches depending on whether the request goes to production or preview.
-- The frontend preview env override is branch-specific because the frontend Vercel project is Git-connected.
-- The backend preview env is project-wide `Preview` because the backend Vercel project is not Git-connected.
+- The frontend preview env overrides are branch-specific because the frontend Vercel project is Git-connected.
+- The backend preview URL overrides for `staging` are branch-specific because the backend Vercel project is Git-connected.
+- If you create additional feature-branch previews later, decide whether they should share the `staging` preview backend or receive their own backend preview overrides.
 
 ### Neon branch layout
 
@@ -288,6 +322,7 @@ Preferred workflow:
 - Use Codex plus **Vercel MCP** to inspect deployments, domains, logs, and environment variables, and to redeploy or verify services.
 - Use Codex plus **Neon MCP** to inspect projects and branches, run SQL, compare schemas, and prepare safe migrations.
 - Treat **Clerk** as shared external auth infrastructure and update its app-facing settings through repository changes and Vercel environment variables first. Use the Clerk dashboard only when the same capability is not exposed through the active toolchain.
+- Prefer changing vendor state through MCP-backed automation over manual console edits so the operational steps can be replayed and documented.
 
 This keeps infrastructure changes more reproducible, reviewable, and easier to document than ad hoc console edits.
 

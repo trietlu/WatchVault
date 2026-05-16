@@ -322,12 +322,12 @@ Location: `native/src`
   - Separate Vercel project
   - Production on `mywatchvault.app`
   - Preview on branch-specific Vercel domains
-  - Current `newstyle` branch alias: `watch-vault-git-newstyle-trietlus-projects.vercel.app`
+  - Current `staging` branch alias: `watch-vault-git-staging-trietlus-projects.vercel.app`
 - Backend:
   - Separate Vercel project
   - Production on `api.mywatchvault.app`
   - Hosted through `backend/api/index.ts` plus `backend/vercel.json`
-  - Current preview deployment example: `watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+  - Current preview deployment example: `watch-vault-sj6g5o8bc-trietlus-projects.vercel.app`
 - Database:
   - Shared Neon project with separate production and preview branches
 - Files:
@@ -359,8 +359,9 @@ Location: `native/src`
   - Vercel `Production` and `Preview` are deployment contexts, not separate codebases
   - Clerk is intentionally shared between production and preview
   - Neon is now split by branch: production backend uses the production branch and preview backend uses the `preview` branch (`br-quiet-recipe-akt7rocp`)
-  - The frontend project is Git-connected and can use branch-specific preview envs such as `Preview (newstyle)`
-  - The backend project is not Git-connected, so its preview configuration is project-wide within the backend Vercel project rather than branch-specific
+  - The frontend project is Git-connected and can use branch-specific preview envs such as `Preview (staging)`
+  - The backend project is now Git-connected and can use branch-specific preview envs such as `Preview (staging)`
+  - Local backend development currently points at the Neon preview branch to reduce accidental writes to production data
 
 ### 10.4 Current Wiring
 
@@ -373,14 +374,14 @@ Location: `native/src`
   - `APP_BASE_URL=<production frontend origin>`
   - `API_BASE_URL=https://api.mywatchvault.app`
   - `CLERK_SECRET_KEY=<shared Clerk secret>`
-- Preview frontend for `newstyle`:
-  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
-  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+- Preview frontend for `staging`:
+  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-api-git-staging-trietlus-projects.vercel.app`
+  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-staging-trietlus-projects.vercel.app`
   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<same shared Clerk publishable key>`
 - Preview backend:
   - `DATABASE_URL` / `DIRECT_URL` -> Neon `preview` branch
-  - `APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
-  - `API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+  - `APP_BASE_URL=https://watch-vault-git-staging-trietlus-projects.vercel.app`
+  - `API_BASE_URL=https://watch-vault-api-git-staging-trietlus-projects.vercel.app`
   - `CLERK_SECRET_KEY=<same shared Clerk secret>`
 
 Effectively:
@@ -412,6 +413,29 @@ Operational rule:
 - Prefer Codex + MCP for repeatable, auditable infrastructure work.
 - Use vendor dashboards only when the same capability is not available through the active automation surface.
 
+### 10.6 Branch and Promotion Workflow
+
+WatchVault uses a staging-based promotion model:
+
+- `main` is the production branch.
+- `staging` is the integrated preview branch.
+- Short-lived feature branches are the unit of daily development work.
+
+Expected sequence:
+
+1. Create a short-lived feature branch for a focused change.
+2. Merge that branch into `staging` for integrated testing on the shared preview stack.
+3. Verify frontend preview, backend preview, and preview Neon behavior.
+4. Merge `staging` into `main` when the release is ready.
+
+Anti-patterns:
+
+- direct development on `main`
+- treating `staging` as an unbounded personal scratch branch
+- allowing `staging` to drift indefinitely without promotion or cleanup
+
+This workflow exists because frontend and backend are separate Vercel projects, preview and production run against different Neon branches, and the environment-variable wiring must stay intentional during promotion.
+
 ## 11. Scaling and Reliability Plan
 
 - API:
@@ -425,7 +449,7 @@ Operational rule:
   - Move blockchain anchoring to queue-based async workers
 - Environments:
   - Decide whether preview should continue sharing the production Clerk instance
-  - Add a stable preview API domain or Git-connect the backend Vercel project so backend preview envs can be branch-specific instead of project-wide
+  - Decide whether future feature branches should get their own backend preview URL/env overrides or continue using the shared staging lane
 
 ## 12. Architecture Decision Summary
 
