@@ -24,7 +24,7 @@ WatchVault is one codebase with separate runtime surfaces:
 Current hosted domains:
 
 - Frontend production: `https://mywatchvault.app`
-- Frontend preview branch alias (`newstyle`): `https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+- Frontend preview branch alias (`staging`): `https://watch-vault-git-staging-trietlus-projects.vercel.app`
 - Frontend preview deployment example: `https://watch-vault-digz9f3d1-trietlus-projects.vercel.app`
 - Backend production: `https://api.mywatchvault.app`
 - Backend preview deployment example: `https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
@@ -259,12 +259,12 @@ Expected production alignment:
 
 Preview note:
 
-- Frontend preview for branch `newstyle` uses:
-  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
-  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+- Frontend preview for branch `staging` uses:
+  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-staging-trietlus-projects.vercel.app`
+  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-api-git-staging-trietlus-projects.vercel.app`
 - Backend preview uses:
-  - `APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
-  - `API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+  - `APP_BASE_URL=https://watch-vault-git-staging-trietlus-projects.vercel.app`
+  - `API_BASE_URL=https://watch-vault-api-git-staging-trietlus-projects.vercel.app`
   - `DATABASE_URL` / `DIRECT_URL` pointed at the Neon preview branch
 - Clerk remains shared between preview and production, so the same signed-in Clerk user is resolved against different database branches depending on whether the request goes to production or preview.
 - The frontend preview env override is branch-specific because the frontend Vercel project is Git-connected.

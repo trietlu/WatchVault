@@ -322,7 +322,7 @@ Location: `native/src`
   - Separate Vercel project
   - Production on `mywatchvault.app`
   - Preview on branch-specific Vercel domains
-  - Current `newstyle` branch alias: `watch-vault-git-newstyle-trietlus-projects.vercel.app`
+  - Current `staging` branch alias: `watch-vault-git-staging-trietlus-projects.vercel.app`
 - Backend:
   - Separate Vercel project
   - Production on `api.mywatchvault.app`
@@ -359,7 +359,7 @@ Location: `native/src`
   - Vercel `Production` and `Preview` are deployment contexts, not separate codebases
   - Clerk is intentionally shared between production and preview
   - Neon is now split by branch: production backend uses the production branch and preview backend uses the `preview` branch (`br-quiet-recipe-akt7rocp`)
-  - The frontend project is Git-connected and can use branch-specific preview envs such as `Preview (newstyle)`
+  - The frontend project is Git-connected and can use branch-specific preview envs such as `Preview (staging)`
   - The backend project is not Git-connected, so its preview configuration is project-wide within the backend Vercel project rather than branch-specific
 
 ### 10.4 Current Wiring
@@ -373,14 +373,14 @@ Location: `native/src`
   - `APP_BASE_URL=<production frontend origin>`
   - `API_BASE_URL=https://api.mywatchvault.app`
   - `CLERK_SECRET_KEY=<shared Clerk secret>`
-- Preview frontend for `newstyle`:
-  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
-  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
+- Preview frontend for `staging`:
+  - `NEXT_PUBLIC_API_BASE_URL=https://watch-vault-api-git-staging-trietlus-projects.vercel.app`
+  - `NEXT_PUBLIC_APP_BASE_URL=https://watch-vault-git-staging-trietlus-projects.vercel.app`
   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<same shared Clerk publishable key>`
 - Preview backend:
   - `DATABASE_URL` / `DIRECT_URL` -> Neon `preview` branch
-  - `APP_BASE_URL=https://watch-vault-git-newstyle-trietlus-projects.vercel.app`
-  - `API_BASE_URL=https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+  - `APP_BASE_URL=https://watch-vault-git-staging-trietlus-projects.vercel.app`
+  - `API_BASE_URL=https://watch-vault-api-git-staging-trietlus-projects.vercel.app`
   - `CLERK_SECRET_KEY=<same shared Clerk secret>`
 
 Effectively:
