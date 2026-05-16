@@ -327,7 +327,7 @@ Location: `native/src`
   - Separate Vercel project
   - Production on `api.mywatchvault.app`
   - Hosted through `backend/api/index.ts` plus `backend/vercel.json`
-  - Current preview deployment example: `watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+  - Current preview deployment example: `watch-vault-sj6g5o8bc-trietlus-projects.vercel.app`
 - Database:
   - Shared Neon project with separate production and preview branches
 - Files:
@@ -360,7 +360,7 @@ Location: `native/src`
   - Clerk is intentionally shared between production and preview
   - Neon is now split by branch: production backend uses the production branch and preview backend uses the `preview` branch (`br-quiet-recipe-akt7rocp`)
   - The frontend project is Git-connected and can use branch-specific preview envs such as `Preview (staging)`
-  - The backend project is not Git-connected, so its preview configuration is project-wide within the backend Vercel project rather than branch-specific
+  - The backend project is now Git-connected and can use branch-specific preview envs such as `Preview (staging)`
 
 ### 10.4 Current Wiring
 
@@ -425,7 +425,7 @@ Operational rule:
   - Move blockchain anchoring to queue-based async workers
 - Environments:
   - Decide whether preview should continue sharing the production Clerk instance
-  - Add a stable preview API domain or Git-connect the backend Vercel project so backend preview envs can be branch-specific instead of project-wide
+  - Decide whether future feature branches should get their own backend preview URL/env overrides or continue using the shared staging lane
 
 ## 12. Architecture Decision Summary
 

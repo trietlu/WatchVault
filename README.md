@@ -25,16 +25,16 @@ Current hosted domains:
 
 - Frontend production: `https://mywatchvault.app`
 - Frontend preview branch alias (`staging`): `https://watch-vault-git-staging-trietlus-projects.vercel.app`
-- Frontend preview deployment example: `https://watch-vault-digz9f3d1-trietlus-projects.vercel.app`
+- Frontend preview deployment example: `https://watch-vault-kb7c1y1z3-trietlus-projects.vercel.app`
 - Backend production: `https://api.mywatchvault.app`
-- Backend preview deployment example: `https://watch-vault-ghuqcotee-trietlus-projects.vercel.app`
+- Backend preview deployment example: `https://watch-vault-sj6g5o8bc-trietlus-projects.vercel.app`
 
 Important deployment notes:
 
 - The frontend and backend are deployed as separate Vercel projects.
 - Vercel `Production` and `Preview` are separate deployment contexts even when they run the same code.
 - Preview and production share the same Clerk instance but no longer share the same Neon branch.
-- The frontend project is Git-connected and supports branch-specific preview env overrides. The backend project is not Git-connected, so its preview envs are project-wide within the backend Vercel project.
+- Both frontend and backend projects are Git-connected and support branch-specific preview env overrides.
 - The backend currently stores uploads on local disk in development and in Vercel `/tmp` at runtime. `/tmp` is ephemeral and is not durable object storage.
 
 ## Tech Stack
@@ -268,7 +268,7 @@ Preview note:
   - `DATABASE_URL` / `DIRECT_URL` pointed at the Neon preview branch
 - Clerk remains shared between preview and production, so the same signed-in Clerk user is resolved against different database branches depending on whether the request goes to production or preview.
 - The frontend preview env override is branch-specific because the frontend Vercel project is Git-connected.
-- The backend preview env is project-wide `Preview` because the backend Vercel project is not Git-connected.
+- The backend preview URL overrides for `staging` are branch-specific because the backend Vercel project is now Git-connected.
 
 ### Neon branch layout
 
