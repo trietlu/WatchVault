@@ -304,6 +304,30 @@ Notes:
 - The backend preview URL overrides for `staging` are branch-specific because the backend Vercel project is Git-connected.
 - If you create additional feature-branch previews later, decide whether they should share the `staging` preview backend or receive their own backend preview overrides.
 
+Preview env scope for the backend uses two layers:
+
+- Project-wide `Preview` envs for values that should stay the same on every non-`main` branch:
+  - `DATABASE_URL`
+  - `DIRECT_URL`
+  - `JWT_SECRET`
+  - `CLERK_SECRET_KEY`
+  - `BLOCKCHAIN_ENABLED`
+- Branch-specific `Preview` envs for values that depend on the actual preview URL:
+  - `APP_BASE_URL`
+  - `API_BASE_URL`
+
+Why `APP_BASE_URL` and `API_BASE_URL` are branch-specific:
+
+- [auth.middleware.ts](/Users/trietlu/WatchVault/backend/src/middleware/auth.middleware.ts#L67) uses `APP_BASE_URL` as Clerk `authorizedParties`.
+- [watch.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/watch.controller.ts#L76) uses `APP_BASE_URL` to build QR and public passport URLs.
+- [file.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/file.controller.ts#L11) relies on the API origin model behind `API_BASE_URL` when serving public file URLs.
+
+Practical rule:
+
+- If all preview branches share one Neon preview branch, keep `DATABASE_URL` and `DIRECT_URL` at generic `Preview`.
+- If each feature branch gets its own backend/frontend URL pair, set `APP_BASE_URL` and `API_BASE_URL` per branch.
+- If you later create one Neon branch per feature branch, then `DATABASE_URL` and `DIRECT_URL` should also become branch-specific.
+
 ### Neon branch layout
 
 The current Neon project layout is:

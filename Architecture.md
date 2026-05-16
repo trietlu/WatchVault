@@ -391,6 +391,30 @@ Effectively:
 - preview resolves that user in the preview Neon branch
 - frontend preview isolation only works because it calls the preview backend instead of `api.mywatchvault.app`
 
+Preview env scope for the backend is intentionally split into two layers:
+
+- Project-wide `Preview` envs:
+  - `DATABASE_URL`
+  - `DIRECT_URL`
+  - `JWT_SECRET`
+  - `CLERK_SECRET_KEY`
+  - `BLOCKCHAIN_ENABLED`
+- Branch-specific `Preview` envs:
+  - `APP_BASE_URL`
+  - `API_BASE_URL`
+
+Reasoning:
+
+- [auth.middleware.ts](/Users/trietlu/WatchVault/backend/src/middleware/auth.middleware.ts#L67) uses `APP_BASE_URL` as Clerk `authorizedParties`.
+- [watch.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/watch.controller.ts#L76) uses `APP_BASE_URL` to generate QR and public passport links.
+- [file.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/file.controller.ts#L11) depends on the API-origin model represented by `API_BASE_URL` when constructing public file access paths.
+
+Operational rule:
+
+- Shared preview database across all non-`main` branches: keep `DATABASE_URL` and `DIRECT_URL` at generic `Preview`.
+- Separate preview URL per branch: make `APP_BASE_URL` and `API_BASE_URL` branch-specific.
+- Separate Neon branch per feature branch: make `DATABASE_URL` and `DIRECT_URL` branch-specific too.
+
 ### 10.5 Operational Model: MCP Over Consoles
 
 The preferred operational path is MCP-backed automation through tools like Codex rather than manual vendor-console edits.

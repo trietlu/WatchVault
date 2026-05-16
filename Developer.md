@@ -67,6 +67,25 @@ Backend:
 - `DIRECT_URL`: direct Neon connection for Prisma workflows
 - `CLERK_SECRET_KEY`: Clerk server verification secret
 
+For hosted preview, backend envs use two layers:
+
+- Project-wide `Preview` envs:
+  - `DATABASE_URL`
+  - `DIRECT_URL`
+  - `JWT_SECRET`
+  - `CLERK_SECRET_KEY`
+  - `BLOCKCHAIN_ENABLED`
+- Branch-specific `Preview` envs:
+  - `APP_BASE_URL`
+  - `API_BASE_URL`
+
+Why:
+
+- `APP_BASE_URL` must match the active frontend preview origin for Clerk authorization and public-link generation.
+- `API_BASE_URL` must match the active backend preview origin for public file and API URL generation.
+- `DATABASE_URL` and `DIRECT_URL` can stay shared if all preview branches use the same Neon preview branch.
+- If each feature branch gets its own Neon branch later, then `DATABASE_URL` and `DIRECT_URL` should also become branch-specific.
+
 If these values do not line up by environment, the most common failures are:
 
 - empty watch lists because the frontend is calling the wrong backend
