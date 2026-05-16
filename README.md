@@ -236,9 +236,12 @@ APP_BASE_URL="http://localhost:3000"
 CLERK_SECRET_KEY=""
 UPLOADS_DIR="uploads"
 BLOCKCHAIN_ENABLED="false"
-CHAIN_RPC_URL="http://127.0.0.1:8545"
+CHAIN_ENV="preview"
+CHAIN_RPC_URL="https://sepolia.base.org"
+CHAIN_ID="84532"
 CHAIN_PRIVATE_KEY=""
 CHAIN_CONTRACT_ADDRESS=""
+BLOB_READ_WRITE_TOKEN=""
 ```
 
 Notes:
@@ -248,6 +251,9 @@ Notes:
 - `APP_BASE_URL` should match the frontend origin.
 - `API_BASE_URL` should match the public API origin.
 - `CLERK_SECRET_KEY` is required when the backend needs to verify Clerk tokens.
+- `CHAIN_ENV=preview` uses Base Sepolia (`84532`) for local and Vercel Preview deployments.
+- `CHAIN_ENV=production` uses Base Mainnet (`8453`) for production deployments.
+- `CHAIN_PRIVATE_KEY` and `CHAIN_CONTRACT_ADDRESS` must point at a wallet/contract on the selected chain before `BLOCKCHAIN_ENABLED=true`.
 
 ### Frontend (`frontend/.env.local`)
 
@@ -312,6 +318,12 @@ Preview env scope for the backend uses two layers:
   - `JWT_SECRET`
   - `CLERK_SECRET_KEY`
   - `BLOCKCHAIN_ENABLED`
+  - `CHAIN_ENV=preview`
+  - `CHAIN_RPC_URL=https://sepolia.base.org`
+  - `CHAIN_ID=84532`
+  - `CHAIN_PRIVATE_KEY`
+  - `CHAIN_CONTRACT_ADDRESS`
+  - `BLOB_READ_WRITE_TOKEN`
 - Branch-specific `Preview` envs for values that depend on the actual preview URL:
   - `APP_BASE_URL`
   - `API_BASE_URL`

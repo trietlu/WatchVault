@@ -75,6 +75,12 @@ For hosted preview, backend envs use two layers:
   - `JWT_SECRET`
   - `CLERK_SECRET_KEY`
   - `BLOCKCHAIN_ENABLED`
+  - `CHAIN_ENV=preview`
+  - `CHAIN_RPC_URL=https://sepolia.base.org`
+  - `CHAIN_ID=84532`
+  - `CHAIN_PRIVATE_KEY`
+  - `CHAIN_CONTRACT_ADDRESS`
+  - `BLOB_READ_WRITE_TOKEN`
 - Branch-specific `Preview` envs:
   - `APP_BASE_URL`
   - `API_BASE_URL`

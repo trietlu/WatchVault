@@ -4,16 +4,33 @@ interface FileRecord {
     id: number;
     url: string;
     type: string;
+    storageProvider?: string;
+    storageKey?: string | null;
+    mimeType?: string | null;
+    sizeBytes?: number | null;
+    checksumSha256?: string | null;
+    visibility?: string;
 }
 
 interface WatchEvent {
     id: number;
+    eventUid?: string;
     eventType: string;
     payloadJson: string;
     payloadHash: string;
+    documentHash?: string | null;
+    uriHash?: string | null;
+    schemaVersion?: number;
+    anchorStatus?: string;
+    anchorError?: string | null;
+    chainId?: number | null;
+    contractAddress?: string | null;
     blockNumber?: number | null;
+    logIndex?: number | null;
+    anchoredAt?: string | null;
     txHash?: string;
     timestamp: string;
+    files?: FileRecord[];
 }
 
 interface Watch {

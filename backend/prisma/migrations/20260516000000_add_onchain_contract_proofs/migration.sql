@@ -1,0 +1,31 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+ALTER TABLE "WatchEvent"
+ADD COLUMN "eventUid" TEXT NOT NULL DEFAULT gen_random_uuid(),
+ADD COLUMN "documentHash" TEXT,
+ADD COLUMN "uriHash" TEXT,
+ADD COLUMN "schemaVersion" INTEGER NOT NULL DEFAULT 1,
+ADD COLUMN "anchorStatus" TEXT NOT NULL DEFAULT 'PENDING',
+ADD COLUMN "anchorAttempts" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN "anchorError" TEXT,
+ADD COLUMN "chainId" INTEGER,
+ADD COLUMN "contractAddress" TEXT,
+ADD COLUMN "logIndex" INTEGER,
+ADD COLUMN "anchoredAt" TIMESTAMP(3);
+
+CREATE UNIQUE INDEX "WatchEvent_eventUid_key" ON "WatchEvent"("eventUid");
+
+UPDATE "WatchEvent"
+SET "anchorStatus" = CASE
+    WHEN "txHash" IS NOT NULL THEN 'ANCHORED'
+    ELSE 'PENDING'
+END;
+
+ALTER TABLE "FileRecord"
+ADD COLUMN "uploadedById" INTEGER,
+ADD COLUMN "storageProvider" TEXT NOT NULL DEFAULT 'local',
+ADD COLUMN "storageKey" TEXT,
+ADD COLUMN "mimeType" TEXT,
+ADD COLUMN "sizeBytes" INTEGER,
+ADD COLUMN "checksumSha256" TEXT,
+ADD COLUMN "visibility" TEXT NOT NULL DEFAULT 'PRIVATE';

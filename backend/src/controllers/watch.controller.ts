@@ -1,28 +1,16 @@
 import type { Request, Response } from 'express';
 import prisma from '../prisma.js';
-import { createHash } from 'crypto';
-import { getContract } from '../config/contract.js';
 import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { env } from '../config/env.js';
 import { buildAbsoluteUrl } from '../lib/url.js';
 import { resolveUploadedFilePath } from '../lib/uploads.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { canonicalJsonStringify, sha256Hex } from '../lib/hash.js';
+import { storePrivateBlob } from '../lib/blob-storage.js';
+import { anchorEventProof, initialAnchorStatus } from '../services/onchain.service.js';
 
 // Helper to hash serial number
 const hashSerial = (serial: string) => {
-    return createHash('sha256').update(serial).digest('hex');
-};
-
-const eventTypeMap: Record<string, number> = {
-    MINT: 0,
-    SERVICE: 1,
-    TRANSFER: 2,
-    AUTH: 3,
-    NOTE: 4,
+    return sha256Hex(serial);
 };
 
 const getAuthenticatedUserId = (req: Request): number | undefined => req.user?.userId;
@@ -51,47 +39,65 @@ export const createWatch = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Watch already registered' });
         }
 
-        const watch = await prisma.watch.create({
-            data: {
-                brand,
-                model,
-                serialNumberHash,
-                ownerId: userId,
-            },
-        });
-
-        // If image was uploaded, save it to FileRecord
-        if (file) {
-            const imageUrl = `/uploads/watches/${file.filename}`;
-            await prisma.fileRecord.create({
-                data: {
-                    watchId: watch.id,
-                    url: imageUrl,
-                    type: 'image',
-                },
-            });
-        }
-
-        // Generate QR Code URL (mock for now, or just the public URL)
-        const qrCodeUrl = buildAbsoluteUrl(env.appBaseUrl, `/p/${watch.publicId}`);
-        const updatedWatch = await prisma.watch.update({
-            where: { id: watch.id },
-            data: { qrCodeUrl },
-        });
-
         // Record MINT event
         const payload = { brand, model, serialNumberHash, mintedBy: userId };
-        const payloadJson = JSON.stringify(payload);
-        const payloadHash = createHash('sha256').update(payloadJson).digest('hex');
+        const payloadJson = canonicalJsonStringify(payload);
+        const payloadHash = sha256Hex(payloadJson);
 
-        await prisma.watchEvent.create({
-            data: {
-                watchId: watch.id,
-                eventType: 'MINT',
-                payloadJson,
-                payloadHash,
-            },
+        const { mintEvent, qrCodeUrl, updatedWatch } = await prisma.$transaction(async (tx) => {
+            const watch = await tx.watch.create({
+                data: {
+                    brand,
+                    model,
+                    serialNumberHash,
+                    ownerId: userId,
+                },
+            });
+
+            if (file) {
+                const imageUrl = `/uploads/watches/${file.filename}`;
+                await tx.fileRecord.create({
+                    data: {
+                        watchId: watch.id,
+                        url: imageUrl,
+                        type: 'image',
+                    },
+                });
+            }
+
+            const qrCodeUrl = buildAbsoluteUrl(env.appBaseUrl, `/p/${watch.publicId}`);
+            const updatedWatch = await tx.watch.update({
+                where: { id: watch.id },
+                data: { qrCodeUrl },
+            });
+
+            const mintEvent = await tx.watchEvent.create({
+                data: {
+                    watchId: watch.id,
+                    eventType: 'MINT',
+                    payloadJson,
+                    payloadHash,
+                    anchorStatus: initialAnchorStatus('MINT'),
+                },
+            });
+
+            return { mintEvent, qrCodeUrl, updatedWatch };
         });
+
+        try {
+            if (env.blockchainEnabled) {
+                await anchorEventProof({
+                    eventId: mintEvent.id,
+                    eventUid: mintEvent.eventUid,
+                    watchCommitment: serialNumberHash,
+                    eventType: mintEvent.eventType,
+                    payloadHash,
+                    schemaVersion: mintEvent.schemaVersion,
+                });
+            }
+        } catch (chainError) {
+            console.error('MINT blockchain anchoring failed:', chainError);
+        }
 
         res.status(201).json({ watch: updatedWatch, qrCodeUrl });
     } catch (error) {
@@ -254,8 +260,8 @@ export const addEvent = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Watch not found' });
         }
 
-        const payloadJson = JSON.stringify(payload);
-        const payloadHash = createHash('sha256').update(payloadJson).digest('hex');
+        const payloadJson = canonicalJsonStringify(payload);
+        const payloadHash = sha256Hex(payloadJson);
 
         // 1. Create event in DB first (pending state)
         const event = await prisma.watchEvent.create({
@@ -264,50 +270,154 @@ export const addEvent = async (req: Request, res: Response) => {
                 eventType,
                 payloadJson,
                 payloadHash,
+                anchorStatus: initialAnchorStatus(eventType),
             },
         });
 
         // 2. Anchor to blockchain
         try {
-            if (!env.blockchainEnabled) {
+            if (!env.blockchainEnabled || event.anchorStatus === 'NOT_REQUIRED') {
                 return res.status(201).json(event);
             }
 
-            const contract = getContract() as any;
-            const eventTypeId = eventTypeMap[eventType] ?? eventTypeMap.NOTE;
-
-            const tx = await contract.recordEvent(
-                '0x' + watch.serialNumberHash,
-                eventTypeId,
-                '0x' + payloadHash
-            );
-
-            console.log(`Transaction sent: ${tx.hash}`);
-
-            // Wait for confirmation (optional, but good for MVP immediate feedback)
-            const receipt = await tx.wait();
-
-            // 3. Update DB with txHash
-            await prisma.watchEvent.update({
-                where: { id: event.id },
-                data: {
-                    txHash: tx.hash,
-                    blockNumber: receipt.blockNumber
-                },
+            const updatedEvent = await anchorEventProof({
+                eventId: event.id,
+                eventUid: event.eventUid,
+                watchCommitment: watch.serialNumberHash,
+                eventType,
+                payloadHash,
+                schemaVersion: event.schemaVersion,
             });
 
-            // Return updated event
-            const updatedEvent = await prisma.watchEvent.findUnique({ where: { id: event.id } });
             res.status(201).json(updatedEvent);
 
         } catch (chainError) {
             console.error('Blockchain anchoring failed:', chainError);
             // Return the event anyway, but it will lack txHash (Pending state in UI)
-            res.status(201).json(event);
+            const failedEvent = await prisma.watchEvent.findUnique({ where: { id: event.id } });
+            res.status(201).json(failedEvent ?? event);
         }
 
     } catch (error) {
         console.error('Add event error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+const allowedContractMimeTypes = new Set([
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+]);
+
+export const uploadContractDocument = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = getAuthenticatedUserId(req);
+        const file = req.file;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        if (!file) {
+            return res.status(400).json({ error: 'No contract file provided' });
+        }
+
+        if (!allowedContractMimeTypes.has(file.mimetype)) {
+            return res.status(400).json({ error: 'Only PDF and image contract files are allowed' });
+        }
+
+        const watch = await prisma.watch.findFirst({
+            where: { id: Number(id), ownerId: userId },
+            select: { id: true, publicId: true, serialNumberHash: true },
+        });
+
+        if (!watch) {
+            return res.status(404).json({ error: 'Watch not found' });
+        }
+
+        const checksumSha256 = sha256Hex(file.buffer);
+        const blob = await storePrivateBlob({
+            buffer: file.buffer,
+            contentType: file.mimetype,
+            filename: file.originalname,
+            pathnamePrefix: `watches/${watch.publicId}/contracts`,
+        });
+
+        const uriHash = sha256Hex(blob.pathname);
+        const payload = {
+            documentHash: checksumSha256,
+            filename: file.originalname,
+            mimeType: file.mimetype,
+            sizeBytes: file.size,
+            storageProvider: 'vercel_blob',
+            uriHash,
+            uploadedBy: userId,
+        };
+        const payloadJson = canonicalJsonStringify(payload);
+        const payloadHash = sha256Hex(payloadJson);
+
+        const event = await prisma.watchEvent.create({
+            data: {
+                watchId: watch.id,
+                eventType: 'CONTRACT_UPLOADED',
+                payloadJson,
+                payloadHash,
+                documentHash: checksumSha256,
+                uriHash,
+                anchorStatus: initialAnchorStatus('CONTRACT_UPLOADED'),
+                files: {
+                    create: {
+                        watchId: watch.id,
+                        uploadedById: userId,
+                        url: blob.url,
+                        storageProvider: 'vercel_blob',
+                        storageKey: blob.pathname,
+                        type: 'contract',
+                        mimeType: file.mimetype,
+                        sizeBytes: file.size,
+                        checksumSha256,
+                        visibility: 'PRIVATE',
+                    },
+                },
+            },
+            include: { files: true },
+        });
+
+        try {
+            if (!env.blockchainEnabled || event.anchorStatus === 'NOT_REQUIRED') {
+                return res.status(201).json(event);
+            }
+
+            const updatedEvent = await anchorEventProof({
+                eventId: event.id,
+                eventUid: event.eventUid,
+                watchCommitment: watch.serialNumberHash,
+                eventType: event.eventType,
+                payloadHash,
+                documentHash: checksumSha256,
+                uriHash,
+                schemaVersion: event.schemaVersion,
+            });
+
+            const eventWithFiles = await prisma.watchEvent.findUnique({
+                where: { id: updatedEvent?.id ?? event.id },
+                include: { files: true },
+            });
+
+            return res.status(201).json(eventWithFiles ?? updatedEvent ?? event);
+        } catch (chainError) {
+            console.error('Contract blockchain anchoring failed:', chainError);
+            const failedEvent = await prisma.watchEvent.findUnique({
+                where: { id: event.id },
+                include: { files: true },
+            });
+            return res.status(201).json(failedEvent ?? event);
+        }
+    } catch (error) {
+        console.error('Upload contract error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

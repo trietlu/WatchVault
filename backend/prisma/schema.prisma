@@ -33,25 +33,43 @@ model Watch {
 }
 
 model WatchEvent {
-  id          Int          @id @default(autoincrement())
-  watchId     Int
-  watch       Watch        @relation(fields: [watchId], references: [id])
-  eventType   String // MINT, SERVICE, TRANSFER, AUTH
-  payloadJson String // JSON string
-  payloadHash String
-  txHash      String?
-  blockNumber Int?
-  timestamp   DateTime     @default(now())
-  files       FileRecord[]
+  id              Int          @id @default(autoincrement())
+  eventUid        String       @unique @default(uuid())
+  watchId         Int
+  watch           Watch        @relation(fields: [watchId], references: [id])
+  eventType       String // MINT, SERVICE, TRANSFER, AUTH, NOTE, CONTRACT_UPLOADED, CONTRACT_SIGNED
+  payloadJson     String // canonical JSON string
+  payloadHash     String
+  documentHash    String?
+  uriHash         String?
+  schemaVersion   Int          @default(1)
+  anchorStatus    String       @default("PENDING") // NOT_REQUIRED, PENDING, SUBMITTED, ANCHORED, FAILED_RETRYABLE, FAILED_FINAL
+  anchorAttempts  Int          @default(0)
+  anchorError     String?
+  chainId         Int?
+  contractAddress String?
+  txHash          String?
+  blockNumber     Int?
+  logIndex        Int?
+  anchoredAt      DateTime?
+  timestamp       DateTime     @default(now())
+  files           FileRecord[]
 }
 
 model FileRecord {
-  id        Int         @id @default(autoincrement())
-  watchId   Int?
-  watch     Watch?      @relation(fields: [watchId], references: [id])
-  eventId   Int?
-  event     WatchEvent? @relation(fields: [eventId], references: [id])
-  url       String
-  type      String
-  createdAt DateTime    @default(now())
+  id              Int         @id @default(autoincrement())
+  watchId         Int?
+  watch           Watch?      @relation(fields: [watchId], references: [id])
+  eventId         Int?
+  event           WatchEvent? @relation(fields: [eventId], references: [id])
+  uploadedById    Int?
+  url             String
+  storageProvider String      @default("local")
+  storageKey      String?
+  type            String
+  mimeType        String?
+  sizeBytes       Int?
+  checksumSha256  String?
+  visibility      String      @default("PRIVATE")
+  createdAt       DateTime    @default(now())
 }

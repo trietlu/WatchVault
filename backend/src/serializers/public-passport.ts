@@ -1,9 +1,16 @@
 interface PublicPassportEventInput {
+    eventUid?: string;
     eventType: string;
     timestamp: Date;
     txHash: string | null;
     blockNumber: number | null;
     payloadHash: string;
+    documentHash?: string | null;
+    uriHash?: string | null;
+    schemaVersion?: number;
+    anchorStatus?: string;
+    chainId?: number | null;
+    contractAddress?: string | null;
     payloadJson?: string;
 }
 

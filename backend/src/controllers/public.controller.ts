@@ -16,10 +16,17 @@ export const getPassport = async (req: Request, res: Response) => {
                 events: {
                     select: {
                         eventType: true,
+                        eventUid: true,
                         timestamp: true,
                         txHash: true,
                         blockNumber: true,
                         payloadHash: true,
+                        documentHash: true,
+                        uriHash: true,
+                        schemaVersion: true,
+                        anchorStatus: true,
+                        chainId: true,
+                        contractAddress: true,
                     },
                     orderBy: { timestamp: 'desc' },
                 },
