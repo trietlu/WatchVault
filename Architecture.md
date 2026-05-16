@@ -361,6 +361,7 @@ Location: `native/src`
   - Neon is now split by branch: production backend uses the production branch and preview backend uses the `preview` branch (`br-quiet-recipe-akt7rocp`)
   - The frontend project is Git-connected and can use branch-specific preview envs such as `Preview (staging)`
   - The backend project is now Git-connected and can use branch-specific preview envs such as `Preview (staging)`
+  - Local backend development currently points at the Neon preview branch to reduce accidental writes to production data
 
 ### 10.4 Current Wiring
 
@@ -411,6 +412,29 @@ Operational rule:
 
 - Prefer Codex + MCP for repeatable, auditable infrastructure work.
 - Use vendor dashboards only when the same capability is not available through the active automation surface.
+
+### 10.6 Branch and Promotion Workflow
+
+WatchVault uses a staging-based promotion model:
+
+- `main` is the production branch.
+- `staging` is the integrated preview branch.
+- Short-lived feature branches are the unit of daily development work.
+
+Expected sequence:
+
+1. Create a short-lived feature branch for a focused change.
+2. Merge that branch into `staging` for integrated testing on the shared preview stack.
+3. Verify frontend preview, backend preview, and preview Neon behavior.
+4. Merge `staging` into `main` when the release is ready.
+
+Anti-patterns:
+
+- direct development on `main`
+- treating `staging` as an unbounded personal scratch branch
+- allowing `staging` to drift indefinitely without promotion or cleanup
+
+This workflow exists because frontend and backend are separate Vercel projects, preview and production run against different Neon branches, and the environment-variable wiring must stay intentional during promotion.
 
 ## 11. Scaling and Reliability Plan
 
