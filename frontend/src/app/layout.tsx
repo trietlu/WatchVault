@@ -37,7 +37,10 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={`${cormorant.variable} ${manrope.variable}`}>
-                <ClerkProvider>
+                <ClerkProvider
+                    signInForceRedirectUrl="/dashboard"
+                    signUpForceRedirectUrl="/dashboard"
+                >
                     <ClerkTokenBridge />
                     <GoogleOAuthProvider clientId={googleClientId}>
                         {children}
