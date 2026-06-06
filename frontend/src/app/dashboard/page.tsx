@@ -5,11 +5,11 @@ import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { getApiAssetUrl } from '@/lib/config';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import EmptyState from '@/components/EmptyState';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AuthenticatedImage from '@/components/AuthenticatedImage';
 import { ArrowRight, ChevronsUpDown, Watch } from 'lucide-react';
 import { useWatchStore } from '@/stores/useWatchStore';
 
@@ -18,15 +18,13 @@ const PAGE_SIZE = 12;
 type SortField = 'brand' | 'model' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
-const getWatchPreviewUrl = (files?: { mimeType?: string | null; type?: string; url: string }[]) => {
-    const image = files?.find((file) => (
+const getWatchPreviewImage = (files?: { id: number; mimeType?: string | null; type?: string; url: string }[]) => (
+    files?.find((file) => (
         file.mimeType?.startsWith('image/')
         || file.type?.toLowerCase().includes('image')
         || /\.(jpe?g|png|webp)$/i.test(file.url)
-    ));
-
-    return image ? getApiAssetUrl(image.url) : null;
-};
+    )) ?? null
+);
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -230,7 +228,7 @@ export default function DashboardPage() {
 
                             <div className="divide-y divide-[color:var(--line)]">
                                 {visibleWatches.map((watch) => {
-                                    const previewUrl = getWatchPreviewUrl(watch.files);
+                                    const previewImage = getWatchPreviewImage(watch.files);
 
                                     return (
                                         <Link
@@ -241,9 +239,9 @@ export default function DashboardPage() {
                                             <div>
                                                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)] md:hidden">Preview</p>
                                                 <div className="h-12 w-16 overflow-hidden rounded border border-[color:var(--line)] bg-[color:var(--surface-strong)]">
-                                                    {previewUrl ? (
-                                                        <img
-                                                            src={previewUrl}
+                                                    {previewImage ? (
+                                                        <AuthenticatedImage
+                                                            src={`/watches/${watch.id}/images/${previewImage.id}/content`}
                                                             alt={`${watch.brand} ${watch.model}`}
                                                             className="h-full w-full object-cover"
                                                         />

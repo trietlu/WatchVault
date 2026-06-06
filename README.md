@@ -241,6 +241,7 @@ CHAIN_RPC_URL="https://sepolia.base.org"
 CHAIN_ID="84532"
 CHAIN_PRIVATE_KEY=""
 CHAIN_CONTRACT_ADDRESS=""
+BLOB_STORE_ID=""
 BLOB_READ_WRITE_TOKEN=""
 ```
 
@@ -254,6 +255,7 @@ Notes:
 - `CHAIN_ENV=preview` uses Base Sepolia (`84532`) for local and Vercel Preview deployments.
 - `CHAIN_ENV=production` uses Base Mainnet (`8453`) for production deployments.
 - `CHAIN_PRIVATE_KEY` and `CHAIN_CONTRACT_ADDRESS` must point at a wallet/contract on the selected chain before `BLOCKCHAIN_ENABLED=true`.
+- `BLOB_STORE_ID` is required for Vercel OIDC Blob uploads/deletes in deployed environments. `BLOB_READ_WRITE_TOKEN` can be used instead for legacy/manual Blob auth.
 
 ### Frontend (`frontend/.env.local`)
 

@@ -11,6 +11,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { ArrowLeft, Watch, Sparkles, Upload, X } from 'lucide-react';
 import { useWatchStore } from '@/stores/useWatchStore';
 import { getErrorMessage } from '@/lib/errors';
+import axios from 'axios';
 
 export default function NewWatchPage() {
     const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -106,7 +107,9 @@ export default function NewWatchPage() {
             });
             router.push('/dashboard');
         } catch (error: unknown) {
-            console.error('Failed to create watch', error);
+            if (!axios.isAxiosError(error) || !error.response || error.response.status >= 500) {
+                console.error('Failed to create watch', error);
+            }
             setError(getErrorMessage(error, 'Failed to create watch'));
         } finally {
             setLoading(false);

@@ -1,3 +1,5 @@
+import './load-env.js';
+
 type EnvSource = NodeJS.ProcessEnv;
 
 const requireEnv = (source: EnvSource, name: string): string => {
@@ -46,6 +48,28 @@ const resolveChainEnvironment = (source: EnvSource): keyof typeof chainDefaults 
     return 'preview';
 };
 
+const resolveBlobReadWriteToken = (source: EnvSource, chainEnvironment: keyof typeof chainDefaults): string | undefined => {
+    if (chainEnvironment === 'production') {
+        return optionalEnv(source, 'BLOB_READ_WRITE_TOKEN')
+            ?? optionalEnv(source, 'PROD_BLOB_READ_WRITE_TOKEN')
+            ?? optionalEnv(source, 'BLOB_PROD_READ_WRITE_TOKEN');
+    }
+
+    return optionalEnv(source, 'BLOB_READ_WRITE_TOKEN')
+        ?? optionalEnv(source, 'BETA_BLOB_READ_WRITE_TOKEN');
+};
+
+const resolveBlobStoreId = (source: EnvSource, chainEnvironment: keyof typeof chainDefaults): string | undefined => {
+    if (chainEnvironment === 'production') {
+        return optionalEnv(source, 'BLOB_STORE_ID')
+            ?? optionalEnv(source, 'PROD_BLOB_STORE_ID')
+            ?? optionalEnv(source, 'BLOB_PROD_STORE_ID');
+    }
+
+    return optionalEnv(source, 'BLOB_STORE_ID')
+        ?? optionalEnv(source, 'BETA_BLOB_STORE_ID');
+};
+
 export const readEnv = (source: EnvSource) => {
     const blockchainEnabled = source.BLOCKCHAIN_ENABLED === 'true';
     const chainEnvironment = resolveChainEnvironment(source);
@@ -66,7 +90,8 @@ export const readEnv = (source: EnvSource) => {
         chainPrivateKey: optionalEnv(source, 'CHAIN_PRIVATE_KEY'),
         chainContractAddress: optionalEnv(source, 'CHAIN_CONTRACT_ADDRESS'),
         chainId: source.CHAIN_ID ? Number(source.CHAIN_ID) : defaultChain.chainId,
-        blobReadWriteToken: optionalEnv(source, 'BLOB_READ_WRITE_TOKEN'),
+        blobReadWriteToken: resolveBlobReadWriteToken(source, chainEnvironment),
+        blobStoreId: resolveBlobStoreId(source, chainEnvironment),
     };
 
     if (resolved.blockchainEnabled) {

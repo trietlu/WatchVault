@@ -1,11 +1,13 @@
 import type { Request, Response } from 'express';
 import prisma from '../prisma.js';
 import fs from 'fs';
+import { randomUUID } from 'crypto';
+import { Readable } from 'stream';
 import { env } from '../config/env.js';
 import { buildAbsoluteUrl } from '../lib/url.js';
 import { resolveUploadedFilePath } from '../lib/uploads.js';
 import { canonicalJsonStringify, sha256Hex } from '../lib/hash.js';
-import { storePrivateBlob } from '../lib/blob-storage.js';
+import { deleteBlob, getBlob, storePrivateBlob } from '../lib/blob-storage.js';
 import { anchorEventProof, initialAnchorStatus } from '../services/onchain.service.js';
 
 // Helper to hash serial number
@@ -15,7 +17,21 @@ const hashSerial = (serial: string) => {
 
 const getAuthenticatedUserId = (req: Request): number | undefined => req.user?.userId;
 
+const storeWatchImageBlob = async (publicId: string, file: Express.Multer.File) => {
+    const checksumSha256 = sha256Hex(file.buffer);
+    const blob = await storePrivateBlob({
+        buffer: file.buffer,
+        contentType: file.mimetype,
+        filename: file.originalname,
+        pathnamePrefix: `watches/${publicId}/images`,
+    });
+
+    return { blob, checksumSha256 };
+};
+
 export const createWatch = async (req: Request, res: Response) => {
+    let uploadedImageToCleanup: string | undefined;
+
     try {
         const { brand, model, serialNumber } = req.body;
         const userId = getAuthenticatedUserId(req);
@@ -44,23 +60,36 @@ export const createWatch = async (req: Request, res: Response) => {
         const payloadJson = canonicalJsonStringify(payload);
         const payloadHash = sha256Hex(payloadJson);
 
+        const publicId = randomUUID();
+        const uploadedImage = file
+            ? await storeWatchImageBlob(publicId, file)
+            : undefined;
+        uploadedImageToCleanup = uploadedImage?.blob.url;
+
         const { mintEvent, qrCodeUrl, updatedWatch } = await prisma.$transaction(async (tx) => {
             const watch = await tx.watch.create({
                 data: {
                     brand,
                     model,
                     serialNumberHash,
+                    publicId,
                     ownerId: userId,
                 },
             });
 
-            if (file) {
-                const imageUrl = `/uploads/watches/${file.filename}`;
+            if (file && uploadedImage) {
                 await tx.fileRecord.create({
                     data: {
                         watchId: watch.id,
-                        url: imageUrl,
+                        uploadedById: userId,
+                        url: uploadedImage.blob.url,
+                        storageProvider: 'vercel_blob',
+                        storageKey: uploadedImage.blob.pathname,
                         type: 'image',
+                        mimeType: file.mimetype,
+                        sizeBytes: file.size,
+                        checksumSha256: uploadedImage.checksumSha256,
+                        visibility: 'PRIVATE',
                     },
                 });
             }
@@ -83,6 +112,7 @@ export const createWatch = async (req: Request, res: Response) => {
 
             return { mintEvent, qrCodeUrl, updatedWatch };
         });
+        uploadedImageToCleanup = undefined;
 
         try {
             if (env.blockchainEnabled) {
@@ -101,6 +131,13 @@ export const createWatch = async (req: Request, res: Response) => {
 
         res.status(201).json({ watch: updatedWatch, qrCodeUrl });
     } catch (error) {
+        if (uploadedImageToCleanup) {
+            try {
+                await deleteBlob(uploadedImageToCleanup);
+            } catch (cleanupError) {
+                console.error('Failed to clean up uploaded watch image blob:', cleanupError);
+            }
+        }
         console.error('Create watch error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
@@ -115,7 +152,7 @@ export const getWatches = async (req: Request, res: Response) => {
 
         const watches = await prisma.watch.findMany({
             where: { ownerId: userId },
-            include: { events: true },
+            include: { events: true, files: { where: { type: 'image' } } },
         });
         res.status(200).json(watches);
     } catch (error) {
@@ -150,6 +187,8 @@ export const getWatchDetail = async (req: Request, res: Response) => {
 };
 
 export const uploadWatchImage = async (req: Request, res: Response) => {
+    let uploadedImageToCleanup: string | undefined;
+
     try {
         const { id } = req.params;
         const userId = getAuthenticatedUserId(req);
@@ -165,7 +204,7 @@ export const uploadWatchImage = async (req: Request, res: Response) => {
 
         const watch = await prisma.watch.findFirst({
             where: { id: Number(id), ownerId: userId },
-            include: { files: true },
+            include: { files: { where: { type: 'image' } } },
         });
 
         if (!watch) {
@@ -177,18 +216,92 @@ export const uploadWatchImage = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Watch already has an image. Delete the existing image first.' });
         }
 
-        const imageUrl = `/uploads/watches/${file.filename}`;
+        const { blob, checksumSha256 } = await storeWatchImageBlob(watch.publicId, file);
+        uploadedImageToCleanup = blob.url;
         const fileRecord = await prisma.fileRecord.create({
             data: {
                 watchId: watch.id,
-                url: imageUrl,
+                uploadedById: userId,
+                url: blob.url,
+                storageProvider: 'vercel_blob',
+                storageKey: blob.pathname,
                 type: 'image',
+                mimeType: file.mimetype,
+                sizeBytes: file.size,
+                checksumSha256,
+                visibility: 'PRIVATE',
             },
         });
+        uploadedImageToCleanup = undefined;
 
         res.status(201).json(fileRecord);
     } catch (error) {
+        if (uploadedImageToCleanup) {
+            try {
+                await deleteBlob(uploadedImageToCleanup);
+            } catch (cleanupError) {
+                console.error('Failed to clean up uploaded watch image blob:', cleanupError);
+            }
+        }
         console.error('Upload image error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+export const getWatchImageContent = async (req: Request, res: Response) => {
+    try {
+        const { id, fileId } = req.params;
+        const userId = getAuthenticatedUserId(req);
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const watch = await prisma.watch.findFirst({
+            where: { id: Number(id), ownerId: userId },
+            select: { id: true },
+        });
+
+        if (!watch) {
+            return res.status(404).json({ error: 'Watch not found' });
+        }
+
+        const fileRecord = await prisma.fileRecord.findUnique({
+            where: { id: Number(fileId) },
+        });
+
+        if (!fileRecord || fileRecord.watchId !== Number(id) || fileRecord.type !== 'image') {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+
+        if (fileRecord.storageProvider === 'vercel_blob') {
+            const blobAccess = fileRecord.visibility === 'PUBLIC' ? 'public' : 'private';
+            const blob = await getBlob(fileRecord.storageKey ?? fileRecord.url, blobAccess);
+
+            if (!blob || blob.statusCode !== 200 || !blob.stream) {
+                return res.status(404).json({ error: 'Image not found' });
+            }
+
+            if (blob.blob.size) {
+                res.setHeader('Content-Length', String(blob.blob.size));
+            }
+
+            res.setHeader('Content-Type', fileRecord.mimeType ?? blob.blob.contentType ?? 'application/octet-stream');
+            res.setHeader('Cache-Control', 'private, max-age=300');
+            Readable.fromWeb(blob.stream as Parameters<typeof Readable.fromWeb>[0]).pipe(res);
+            return;
+        }
+
+        const filePath = resolveUploadedFilePath(fileRecord.url);
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+
+        res.setHeader('Content-Type', fileRecord.mimeType ?? 'application/octet-stream');
+        res.setHeader('Cache-Control', 'private, max-age=300');
+        fs.createReadStream(filePath).pipe(res);
+    } catch (error) {
+        console.error('Get image content error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -215,14 +328,17 @@ export const deleteWatchImage = async (req: Request, res: Response) => {
             where: { id: Number(fileId) },
         });
 
-        if (!fileRecord || fileRecord.watchId !== Number(id)) {
+        if (!fileRecord || fileRecord.watchId !== Number(id) || fileRecord.type !== 'image') {
             return res.status(404).json({ error: 'Image not found' });
         }
 
-        // Delete file from filesystem
-        const filePath = resolveUploadedFilePath(fileRecord.url);
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+        if (fileRecord.storageProvider === 'vercel_blob') {
+            await deleteBlob(fileRecord.storageKey ?? fileRecord.url);
+        } else {
+            const filePath = resolveUploadedFilePath(fileRecord.url);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
         }
 
         // Delete record from database

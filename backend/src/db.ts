@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './config/load-env.js';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClient } from './generated/prisma/index.js';
 

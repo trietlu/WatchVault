@@ -8,8 +8,9 @@ import QRCode from 'react-qr-code';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AuthenticatedImage from '@/components/AuthenticatedImage';
 import { ArrowLeft, Plus, CheckCircle, Clock, Shield, FileText, ExternalLink, Watch as WatchIcon, Upload, Trash2 } from 'lucide-react';
-import { buildPublicPassportUrl, getApiAssetUrl } from '@/lib/config';
+import { buildPublicPassportUrl } from '@/lib/config';
 import { useWatchStore } from '@/stores/useWatchStore';
 import { getErrorMessage } from '@/lib/errors';
 
@@ -37,6 +38,12 @@ interface FileRecord {
     id: number;
     url: string;
     type: string;
+    storageProvider?: string;
+    storageKey?: string | null;
+    mimeType?: string | null;
+    sizeBytes?: number | null;
+    checksumSha256?: string | null;
+    visibility?: string;
 }
 
 const eventIcons: Record<string, React.ReactNode> = {
@@ -161,6 +168,7 @@ export default function WatchDetailPage() {
     }
 
     const publicUrl = buildPublicPassportUrl(watch.publicId);
+    const watchImage = watch.files?.find((file) => file.type === 'image');
 
     return (
         <div className="min-h-screen bg-light-grey">
@@ -179,15 +187,15 @@ export default function WatchDetailPage() {
                     <div className="lg:col-span-1 space-y-6">
                         <div className="card-premium">
                             <div className="relative mb-6 aspect-square overflow-hidden rounded-[24px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] flex items-center justify-center">
-                                {watch.files && watch.files.length > 0 ? (
+                                {watchImage ? (
                                     <>
-                                        <img
-                                            src={getApiAssetUrl(watch.files[0].url)}
+                                        <AuthenticatedImage
+                                            src={`/watches/${watch.id}/images/${watchImage.id}/content`}
                                             alt={`${watch.brand} ${watch.model}`}
                                             className="w-full h-full object-cover"
                                         />
                                         <button
-                                            onClick={() => handleImageDelete(watch.files[0].id)}
+                                            onClick={() => handleImageDelete(watchImage.id)}
                                             className="absolute right-3 top-3 rounded-full bg-[color:var(--footer)] p-2 text-white transition-colors shadow-lg hover:bg-[#30241c]"
                                             title="Delete image"
                                         >
