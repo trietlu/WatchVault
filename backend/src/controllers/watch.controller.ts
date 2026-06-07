@@ -154,20 +154,6 @@ export const getWatches = async (req: Request, res: Response) => {
             where: { ownerId: userId },
             include: { events: true, files: { where: { type: 'image' } } },
         });
-
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { email: true },
-        });
-        console.info('Get watches resolved user', {
-            userId,
-            email: user?.email,
-            watchCount: watches.length,
-            origin: req.headers.origin,
-            vercelEnv: process.env.VERCEL_ENV,
-            vercelUrl: process.env.VERCEL_URL,
-        });
-
         res.status(200).json(watches);
     } catch (error) {
         console.error('Get watches error:', error);
