@@ -62,9 +62,13 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         }
 
         try {
+            const authorizedParties = env.clerkAuthorizedParties.length > 0
+                ? env.clerkAuthorizedParties
+                : [env.appBaseUrl];
+
             const claims = await verifyToken(token, {
                 secretKey: env.clerkSecretKey,
-                authorizedParties: [env.appBaseUrl],
+                authorizedParties,
             });
 
             if (!claims.sub) {

@@ -16,6 +16,13 @@ const optionalEnv = (source: EnvSource, name: string): string | undefined => {
     return value ? value : undefined;
 };
 
+const parseListEnv = (value: string | undefined): string[] => (
+    value
+        ?.split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean) ?? []
+);
+
 const parsePort = (value: string): number => {
     const parsed = Number(value);
     if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -81,6 +88,7 @@ export const readEnv = (source: EnvSource) => {
         jwtSecret: requireEnv(source, 'JWT_SECRET'),
         apiBaseUrl: source.API_BASE_URL ?? 'http://localhost:3001',
         appBaseUrl: source.APP_BASE_URL ?? 'http://localhost:3000',
+        clerkAuthorizedParties: parseListEnv(source.CLERK_AUTHORIZED_PARTIES),
         clerkSecretKey: optionalEnv(source, 'CLERK_SECRET_KEY'),
         uploadsDir: source.UPLOADS_DIR ?? 'uploads',
         blockchainEnabled,
