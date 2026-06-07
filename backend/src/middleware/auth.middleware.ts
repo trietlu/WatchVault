@@ -17,20 +17,48 @@ const resolveClerkEmail = async (clerkUserId: string) => {
     const primaryEmail = clerkUser.emailAddresses.find(
         (email) => email.id === clerkUser.primaryEmailAddressId
     )?.emailAddress ?? clerkUser.emailAddresses[0]?.emailAddress;
+    const clerkEmails = Array.from(new Set(
+        clerkUser.emailAddresses
+            .map((email) => email.emailAddress.trim().toLowerCase())
+            .filter(Boolean)
+    ));
 
     if (!primaryEmail) {
         return null;
     }
 
     const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || undefined;
-    let user = await prisma.user.findUnique({
-        where: { email: primaryEmail },
+    const primaryEmailNormalized = primaryEmail.trim().toLowerCase();
+    const existingUsers = await prisma.user.findMany({
+        where: { email: { in: clerkEmails.length > 0 ? clerkEmails : [primaryEmailNormalized] } },
+        include: { _count: { select: { watches: true } } },
     });
+
+    const selectedUser = existingUsers
+        .sort((a, b) => {
+            const watchDiff = b._count.watches - a._count.watches;
+            if (watchDiff !== 0) {
+                return watchDiff;
+            }
+
+            if (a.email === primaryEmailNormalized) {
+                return -1;
+            }
+
+            if (b.email === primaryEmailNormalized) {
+                return 1;
+            }
+
+            return a.id - b.id;
+        })[0];
+    let user = selectedUser
+        ? await prisma.user.findUnique({ where: { id: selectedUser.id } })
+        : null;
 
     if (!user) {
         user = await prisma.user.create({
             data: {
-                email: primaryEmail,
+                email: primaryEmailNormalized,
                 ...(name ? { name } : {}),
             },
         });
