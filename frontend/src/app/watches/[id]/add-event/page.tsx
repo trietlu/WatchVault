@@ -10,10 +10,10 @@ import { ArrowLeft, Calendar, MapPin, FileText, Sparkles } from 'lucide-react';
 import { useWatchStore } from '@/stores/useWatchStore';
 
 const eventTypeOptions = [
-    { value: 'SERVICE', label: 'Service / Repair', icon: 'SR' },
-    { value: 'AUTH', label: 'Authentication', icon: 'AT' },
-    { value: 'TRANSFER', label: 'Ownership Transfer', icon: 'OT' },
-    { value: 'NOTE', label: 'Note / Log', icon: 'NL' },
+    { value: 'SERVICE', label: 'Service / Repair', code: 'SR' },
+    { value: 'AUTH', label: 'Authentication', code: 'AT' },
+    { value: 'TRANSFER', label: 'Ownership Transfer', code: 'OT' },
+    { value: 'NOTE', label: 'Note / Log', code: 'NL' },
 ];
 
 export default function AddEventPage() {
@@ -103,10 +103,9 @@ export default function AddEventPage() {
                                                 : 'border-[color:var(--line)] bg-[color:var(--surface)] hover:border-[color:var(--accent-soft)]'
                                             }`}
                                     >
-                                        <div className="text-2xl mb-2">{option.icon}</div>
-                                        <div className={`text-sm font-semibold ${eventType === option.value ? 'text-[color:var(--ink)]' : 'text-[color:var(--muted)]'
+                                        <div className={`text-base font-semibold ${eventType === option.value ? 'text-[color:var(--ink)]' : 'text-[color:var(--muted)]'
                                             }`}>
-                                            {option.label}
+                                            {option.label} ({option.code})
                                         </div>
                                     </button>
                                 ))}

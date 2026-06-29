@@ -185,11 +185,11 @@ export default function NewWatchPage() {
                                     />
                                 </label>
                             ) : (
-                                <div className="relative">
+                                <div className="relative flex items-center justify-center overflow-hidden rounded-[24px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-2">
                                     <img
                                         src={imagePreview}
                                         alt="Watch preview"
-                                        className="h-64 w-full rounded-[24px] object-cover"
+                                        className="max-h-[520px] max-w-full rounded-[18px] object-contain"
                                     />
                                     <button
                                         type="button"

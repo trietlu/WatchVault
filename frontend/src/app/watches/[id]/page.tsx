@@ -20,6 +20,7 @@ interface Event {
     payloadJson: string;
     payloadHash: string;
     txHash?: string;
+    anchorStatus?: string | null;
     timestamp: string;
 }
 
@@ -51,6 +52,63 @@ const eventIcons: Record<string, React.ReactNode> = {
     SERVICE: <Clock className="w-4 h-4" />,
     TRANSFER: <ExternalLink className="w-4 h-4" />,
     AUTH: <FileText className="w-4 h-4" />,
+};
+
+const hiddenPayloadKeys = new Set(['mintedBy']);
+
+const payloadLabelOverrides: Record<string, string> = {
+    serialNumberHash: 'Serial Hash',
+    payloadHash: 'Payload Hash',
+    txHash: 'Transaction Hash',
+    watchId: 'Watch ID',
+};
+
+const formatPayloadLabel = (key: string) => {
+    if (payloadLabelOverrides[key]) return payloadLabelOverrides[key];
+
+    return key
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const formatPayloadValue = (value: unknown) => {
+    if (value === null || value === undefined || value === '') return 'N/A';
+    if (typeof value === 'object') return JSON.stringify(value);
+
+    return String(value);
+};
+
+const getAnchorStatus = (event: Event) => {
+    if (event.txHash || event.anchorStatus === 'ANCHORED') {
+        return {
+            label: 'Anchored',
+            className: 'badge-success',
+            icon: <CheckCircle className="w-3 h-3" />,
+        };
+    }
+
+    if (event.anchorStatus === 'NOT_REQUIRED') {
+        return {
+            label: 'Local Record',
+            className: 'badge-warning',
+            icon: <FileText className="w-3 h-3" />,
+        };
+    }
+
+    if (event.anchorStatus?.startsWith('FAILED')) {
+        return {
+            label: 'Anchor Failed',
+            className: 'badge-warning',
+            icon: <Clock className="w-3 h-3" />,
+        };
+    }
+
+    return {
+        label: 'Awaiting Anchor',
+        className: 'badge-warning',
+        icon: <Clock className="w-3 h-3" />,
+    };
 };
 
 export default function WatchDetailPage() {
@@ -183,90 +241,75 @@ export default function WatchDetailPage() {
                     <span>Back to Dashboard</span>
                 </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="card-premium">
-                            <div className="relative mb-6 aspect-square overflow-hidden rounded-[24px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] flex items-center justify-center">
-                                {watchImage ? (
-                                    <>
-                                        <AuthenticatedImage
-                                            src={`/watches/${watch.id}/images/${watchImage.id}/content`}
-                                            alt={`${watch.brand} ${watch.model}`}
-                                            className="w-full h-full object-cover"
+                <h1 className="mb-8 text-[48px] leading-none text-[color:var(--ink)] sm:text-[64px] lg:text-[72px]">
+                    Watch Details
+                </h1>
+
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                    <div className="card-premium lg:col-span-1">
+                        <div className="relative mb-6 flex aspect-square items-center justify-center overflow-hidden rounded-[24px] border border-[color:var(--line)] bg-[color:var(--surface-strong)]">
+                            {watchImage ? (
+                                <>
+                                    <AuthenticatedImage
+                                        src={`/watches/${watch.id}/images/${watchImage.id}/content`}
+                                        alt={`${watch.brand} ${watch.model}`}
+                                        className="h-full w-full object-contain"
+                                    />
+                                    <button
+                                        onClick={() => handleImageDelete(watchImage.id)}
+                                        className="absolute right-3 top-3 rounded-full bg-[color:var(--footer)] p-2 text-white transition-colors shadow-lg hover:bg-[#30241c]"
+                                        title="Delete image"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <WatchIcon className="w-24 h-24 text-[color:var(--accent-strong)] opacity-30" />
+                                    <label className="absolute inset-0 flex cursor-pointer items-center justify-center transition-colors hover:bg-black/5">
+                                        <div className="text-center">
+                                            <Upload className="mx-auto mb-2 h-8 w-8 text-[color:var(--accent-strong)]" />
+                                            <p className="text-sm font-medium text-[color:var(--ink)]">Upload Image</p>
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                                            onChange={handleImageUpload}
+                                            className="hidden"
+                                            disabled={uploading}
                                         />
-                                        <button
-                                            onClick={() => handleImageDelete(watchImage.id)}
-                                            className="absolute right-3 top-3 rounded-full bg-[color:var(--footer)] p-2 text-white transition-colors shadow-lg hover:bg-[#30241c]"
-                                            title="Delete image"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <WatchIcon className="w-24 h-24 text-[color:var(--accent-strong)] opacity-30" />
-                                        <label className="absolute inset-0 flex items-center justify-center cursor-pointer transition-colors hover:bg-black/5">
-                                            <div className="text-center">
-                                                <Upload className="mx-auto mb-2 h-8 w-8 text-[color:var(--accent-strong)]" />
-                                                <p className="text-sm font-medium text-[color:var(--ink)]">Upload Image</p>
-                                            </div>
-                                            <input
-                                                type="file"
-                                                accept="image/jpeg,image/jpg,image/png,image/webp"
-                                                onChange={handleImageUpload}
-                                                className="hidden"
-                                                disabled={uploading}
-                                            />
-                                        </label>
-                                        {uploading && (
-                                            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                                                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-
-                            <h1 className="mb-2 text-[color:var(--ink)]">
-                                {watch.brand}
-                            </h1>
-                            <p className="mb-6 text-xl text-[color:var(--muted)]">{watch.model}</p>
-
-                            <div className="space-y-4">
-                                <div className="rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4">
-                                    <span className="mb-1 block text-xs font-medium uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                                        Serial Hash
-                                    </span>
-                                    <span className="break-all font-mono text-xs text-[color:var(--ink)]">
-                                        {watch.serialNumberHash}
-                                    </span>
-                                </div>
-                                <div className="rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4">
-                                    <span className="mb-1 block text-xs font-medium uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                                        Public ID
-                                    </span>
-                                    <span className="font-mono text-xs text-[color:var(--ink)]">
-                                        {watch.publicId}
-                                    </span>
-                                </div>
-                            </div>
+                                    </label>
+                                    {uploading && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                                            <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
 
-                        <div className="card-blue text-center">
-                            <h3 className="mb-4 text-[color:var(--ink)]">
-                                Digital Passport QR
-                            </h3>
-                            <div className="inline-block rounded-[24px] bg-white p-4">
-                                <QRCode value={publicUrl} size={180} />
+                        <h2 className="mb-2 max-w-full break-words text-[48px] leading-[0.95] text-[color:var(--ink)] sm:text-[56px] lg:text-[50px] xl:text-[56px]">
+                            {watch.brand}
+                        </h2>
+                        <p className="mb-6 text-xl text-[color:var(--muted)]">{watch.model}</p>
+
+                        <div className="space-y-4">
+                            <div className="rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4">
+                                <span className="mb-1 block text-xs font-medium uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                                    Serial Hash
+                                </span>
+                                <span className="break-all font-mono text-xs text-[color:var(--ink)]">
+                                    {watch.serialNumberHash}
+                                </span>
                             </div>
-                            <Link
-                                href={`/p/${watch.publicId}`}
-                                target="_blank"
-                                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[color:var(--accent-strong)] transition-colors hover:text-[color:var(--ink)]"
-                            >
-                                <span>View Public Passport</span>
-                                <ExternalLink className="w-4 h-4" />
-                            </Link>
+                            <div className="rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4">
+                                <span className="mb-1 block text-xs font-medium uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                                    Public ID
+                                </span>
+                                <span className="break-all font-mono text-xs text-[color:var(--ink)]">
+                                    {watch.publicId}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -300,6 +343,11 @@ export default function WatchDetailPage() {
                                 <div className="relative ml-4 space-y-8 border-l-2 border-[color:var(--accent-soft)]">
                                     {watch.events.map((event) => {
                                         const payload = JSON.parse(event.payloadJson);
+                                        const visiblePayloadEntries = Object.entries(payload).filter(
+                                            ([key]) => !hiddenPayloadKeys.has(key)
+                                        );
+                                        const anchorStatus = getAnchorStatus(event);
+
                                         return (
                                             <div key={event.id} className="relative ml-8">
                                                 <div className="absolute -left-[37px] flex h-8 w-8 items-center justify-center rounded-full border-4 border-[color:var(--surface)] bg-[color:var(--accent-strong)] shadow-md">
@@ -325,31 +373,28 @@ export default function WatchDetailPage() {
                                                             </time>
                                                         </div>
                                                         <div>
-                                                            {event.txHash ? (
-                                                                <span className="badge-success">
-                                                                    <CheckCircle className="w-3 h-3" />
-                                                                    Anchored
-                                                                </span>
-                                                            ) : (
-                                                                <span className="badge-warning">
-                                                                    <Clock className="w-3 h-3" />
-                                                                    Pending
-                                                                </span>
-                                                            )}
+                                                            <span className={anchorStatus.className}>
+                                                                {anchorStatus.icon}
+                                                                {anchorStatus.label}
+                                                            </span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                        {Object.entries(payload).map(([key, value]) => (
-                                                            <div key={key} className="rounded-[18px] bg-[color:var(--surface-strong)] p-3">
-                                                                <span className="mb-1 block text-xs font-medium uppercase tracking-[0.22em] text-[color:var(--muted)]">
-                                                                    {key}
-                                                                </span>
-                                                                <span className="text-sm text-[color:var(--ink)]">
-                                                                    {String(value)}
-                                                                </span>
-                                                            </div>
-                                                        ))}
+                                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                        {visiblePayloadEntries.map(([key, value]) => {
+                                                            const isHashLike = /hash/i.test(key);
+
+                                                            return (
+                                                                <div key={key} className="min-w-0 rounded-[18px] bg-[color:var(--surface-strong)] p-3">
+                                                                    <span className="mb-1 block text-xs font-medium uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                                                                        {formatPayloadLabel(key)}
+                                                                    </span>
+                                                                    <span className={`block min-w-0 text-sm text-[color:var(--ink)] ${isHashLike ? 'break-all font-mono' : 'break-words'}`}>
+                                                                        {formatPayloadValue(value)}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             </div>
@@ -358,6 +403,23 @@ export default function WatchDetailPage() {
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    <div className="card-blue text-center lg:col-span-1">
+                        <h3 className="mb-4 text-[color:var(--ink)]">
+                            Digital Passport QR
+                        </h3>
+                        <div className="inline-block rounded-[24px] bg-white p-4">
+                            <QRCode value={publicUrl} size={180} />
+                        </div>
+                        <Link
+                            href={`/p/${watch.publicId}`}
+                            target="_blank"
+                            className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[color:var(--accent-strong)] transition-colors hover:text-[color:var(--ink)]"
+                        >
+                            <span>View Public Passport</span>
+                            <ExternalLink className="w-4 h-4" />
+                        </Link>
                     </div>
                 </div>
             </main>

@@ -183,8 +183,7 @@ export default function DashboardPage() {
                     <div>
                         <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
                             <div>
-                                <p className="text-sm uppercase tracking-[0.28em] text-[color:var(--muted)]">Collection</p>
-                                <h2 className="mt-2 text-[color:var(--ink)]">Your Timepieces</h2>
+                                <h2 className="text-[color:var(--ink)]">Collection</h2>
                                 <p className="mt-2 text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
                                     {watches.length} {watches.length === 1 ? 'watch' : 'watches'}
                                 </p>
@@ -216,17 +215,8 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        <div className="card-premium overflow-hidden p-0">
-                            <div className="hidden grid-cols-[72px_minmax(140px,1fr)_minmax(140px,1fr)_minmax(220px,1.35fr)_140px_88px] gap-4 border-b border-[color:var(--line)] px-6 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)] md:grid">
-                                <span>Preview</span>
-                                <span>Brand</span>
-                                <span>Model</span>
-                                <span>Serial Hash</span>
-                                <span>Date Added</span>
-                                <span className="sr-only">Open</span>
-                            </div>
-
-                            <div className="divide-y divide-[color:var(--line)]">
+                        <div>
+                            <div className="grid gap-4 lg:grid-cols-2">
                                 {visibleWatches.map((watch) => {
                                     const previewImage = getWatchPreviewImage(watch.files);
 
@@ -234,11 +224,10 @@ export default function DashboardPage() {
                                         <Link
                                             key={watch.id}
                                             href={`/watches/${watch.id}`}
-                                            className="grid gap-3 px-6 py-5 transition-colors hover:bg-[color:var(--surface-strong)] md:grid-cols-[72px_minmax(140px,1fr)_minmax(140px,1fr)_minmax(220px,1.35fr)_140px_88px] md:items-center md:gap-4"
+                                            className="group flex min-h-32 flex-col justify-between gap-4 rounded border border-[color:var(--line)] bg-[color:var(--surface)] p-4 transition-colors hover:border-[color:var(--accent)] hover:bg-[color:var(--surface-strong)] sm:flex-row sm:items-center"
                                         >
-                                            <div>
-                                                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)] md:hidden">Preview</p>
-                                                <div className="h-12 w-16 overflow-hidden rounded border border-[color:var(--line)] bg-[color:var(--surface-strong)]">
+                                            <div className="flex min-w-0 flex-1 items-center gap-4">
+                                                <div className="h-20 w-24 shrink-0 overflow-hidden rounded border border-[color:var(--line)] bg-[color:var(--surface-strong)]">
                                                     {previewImage ? (
                                                         <AuthenticatedImage
                                                             src={`/watches/${watch.id}/images/${previewImage.id}/content`}
@@ -251,30 +240,22 @@ export default function DashboardPage() {
                                                         </div>
                                                     )}
                                                 </div>
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-lg font-semibold text-[color:var(--ink)]">{watch.brand}</p>
+                                                    <p className="truncate text-sm text-[color:var(--muted)]">{watch.model}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)] md:hidden">Brand</p>
-                                                <p className="text-lg font-semibold text-[color:var(--ink)]">{watch.brand}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)] md:hidden">Model</p>
-                                                <p className="text-base text-[color:var(--ink)]">{watch.model}</p>
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)] md:hidden">Serial Hash</p>
-                                                <p className="truncate font-mono text-sm text-[color:var(--muted)]">{watch.serialNumberHash}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)] md:hidden">Date Added</p>
-                                                <p className="text-sm text-[color:var(--muted)]">
+
+                                            <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+                                                <p className="rounded-full border border-[color:var(--line)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--muted)]">
                                                     {watch.createdAt
                                                         ? new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(watch.createdAt))
                                                         : 'N/A'}
                                                 </p>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent-strong)]">
-                                                Open
-                                                <ArrowRight className="h-4 w-4" />
+                                                <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent-strong)]">
+                                                    Open
+                                                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                                </span>
                                             </div>
                                         </Link>
                                     );
