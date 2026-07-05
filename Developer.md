@@ -98,6 +98,8 @@ If these values do not line up by environment, the most common failures are:
 - auth failures because the backend `APP_BASE_URL` does not match the active frontend origin
 - production and preview data mixing because the backend points at the wrong Neon branch
 
+For these and other recurring issues (including blank watch images from an expired local Vercel Blob token), see [Troubleshooting.md](Troubleshooting.md).
+
 ## Operational Rules
 
 Prefer MCP-backed automation through Codex over direct console work when possible.
@@ -118,3 +120,7 @@ Before merging `staging` into `main`:
 4. Confirm production env values are still pointed at production domains and the production Neon branch.
 5. Merge `staging` into `main`.
 6. Verify production frontend and backend after deployment.
+
+## Troubleshooting
+
+For common local and hosted issues and their fixes, see [Troubleshooting.md](Troubleshooting.md). It covers, among others, blank watch images caused by an expired local Vercel Blob (`VERCEL_OIDC_TOKEN`) credential and how to refresh it.

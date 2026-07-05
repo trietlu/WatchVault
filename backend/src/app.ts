@@ -3,7 +3,6 @@ import cors from 'cors';
 import authRoutes from './routes/auth.routes.js';
 import watchRoutes from './routes/watch.routes.js';
 import publicRoutes from './routes/public.routes.js';
-import fileRoutes from './routes/file.routes.js';
 import { getUploadsRoot } from './lib/uploads.js';
 
 const app = express();
@@ -14,7 +13,6 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/watches', watchRoutes);
 app.use('/passports', publicRoutes);
-app.use('/files', fileRoutes);
 app.use('/uploads', express.static(getUploadsRoot()));
 
 app.get('/health', (req, res) => {

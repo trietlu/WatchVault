@@ -86,12 +86,10 @@ Location: `backend/src`
   - `auth.routes.ts` -> `/auth/*`
   - `watch.routes.ts` -> `/watches/*`
   - `public.routes.ts` -> `/passports/*`
-  - `file.routes.ts` -> `/files/*`
 - Controllers:
   - `auth.controller.ts`
   - `watch.controller.ts`
   - `public.controller.ts`
-  - `file.controller.ts`
 - Middleware:
   - `auth.middleware.ts` for JWT validation, Clerk token verification, and local user resolution
   - `upload.middleware.ts` for Multer image constraints
@@ -153,13 +151,14 @@ Location: `native/src`
 - `GET /watches`
 - `GET /watches/:id`
 - `POST /watches/:id/events`
+- `POST /watches/:id/contracts`
 - `POST /watches/:id/images`
+- `GET /watches/:id/images/:fileId/content`
 - `DELETE /watches/:id/images/:fileId`
 
 ### 5.3 Public and Files
 
 - `GET /passports/:publicId`
-- `POST /files/upload`
 - `GET /uploads/*`
 - `GET /health`
 
@@ -413,7 +412,7 @@ Reasoning:
 
 - [auth.middleware.ts](/Users/trietlu/WatchVault/backend/src/middleware/auth.middleware.ts#L67) uses `APP_BASE_URL` as Clerk `authorizedParties`.
 - [watch.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/watch.controller.ts#L76) uses `APP_BASE_URL` to generate QR and public passport links.
-- [file.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/file.controller.ts#L11) depends on the API-origin model represented by `API_BASE_URL` when constructing public file access paths.
+- [watch.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/watch.controller.ts) depends on the API-origin model represented by `API_BASE_URL` when constructing public file access paths.
 
 Operational rule:
 

@@ -334,7 +334,7 @@ Why `APP_BASE_URL` and `API_BASE_URL` are branch-specific:
 
 - [auth.middleware.ts](/Users/trietlu/WatchVault/backend/src/middleware/auth.middleware.ts#L67) uses `APP_BASE_URL` as Clerk `authorizedParties`.
 - [watch.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/watch.controller.ts#L76) uses `APP_BASE_URL` to build QR and public passport URLs.
-- [file.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/file.controller.ts#L11) relies on the API origin model behind `API_BASE_URL` when serving public file URLs.
+- [watch.controller.ts](/Users/trietlu/WatchVault/backend/src/controllers/watch.controller.ts) relies on the API origin model behind `API_BASE_URL` when serving public file URLs.
 
 Practical rule:
 
@@ -429,6 +429,8 @@ Suggested checks:
 
 ## Troubleshooting
 
+For recurring development and deployment issues beyond first-time setup, see [Troubleshooting.md](Troubleshooting.md).
+
 ### Backend will not start
 
 - Confirm `DATABASE_URL` points at a reachable Postgres/Neon database.
@@ -452,6 +454,10 @@ Suggested checks:
 - Verify `backend/uploads/watches` exists in local development.
 - Confirm the file is under the 8 MB limit and uses an allowed image format.
 - On Vercel, remember uploads currently land in `/tmp` and are not durable.
+
+### Watch images show as blank
+
+- Locally, this is usually an expired Vercel Blob credential (`VERCEL_OIDC_TOKEN`) in `backend/.env.local`, causing `403 Forbidden` on image reads. See [Troubleshooting.md](Troubleshooting.md) for the refresh steps and a durable fix.
 
 ### Auth behaves differently between preview and production
 
