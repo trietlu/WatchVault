@@ -66,6 +66,7 @@ These are **preview-environment** blobs (local dev points `DATABASE_URL`/`DIRECT
 
 This repo is intended to be operated through MCP-backed automation (see the MCP sections in [README.md](README.md) and [Architecture.md](Architecture.md)).
 
-- **Codex** has the Vercel MCP server configured in `.codex/config.toml` (`https://mcp.vercel.com`).
-- **Claude Code** reads project MCP servers from `.mcp.json` at the repo root. If the Vercel tools are not available in a Claude Code session, run `/mcp` to trust the server and complete the one-time Vercel OAuth.
-- The Vercel CLI (`npx vercel ...`) is always available as a fallback and does not require MCP.
+- Both **Claude Code** (`.mcp.json`) and **Codex** (`.codex/config.toml`) declare the same remote servers: `vercel` (`https://mcp.vercel.com`) and `neon` (`https://mcp.neon.tech/mcp`).
+- These are remote HTTP servers that authenticate via OAuth on first connect. If the Vercel or Neon tools are not available in a Claude Code session, run `/mcp` to trust the server and complete the one-time OAuth (this cannot be done in a non-interactive session).
+- The Vercel CLI (`npx vercel ...`) is always available as a fallback and does not require MCP. For Neon, the CLI (`neonctl`) or a direct `psql`/`DATABASE_URL` connection are equivalent fallbacks.
+- Clerk has no management MCP: the official Clerk MCP (`https://mcp.clerk.com/mcp`) only serves read-only SDK documentation snippets. Manage Clerk through its dashboard, repo config, and Vercel env vars.

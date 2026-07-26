@@ -102,11 +102,11 @@ For these and other recurring issues (including blank watch images from an expir
 
 ## Operational Rules
 
-Prefer MCP-backed automation through Codex over direct console work when possible.
+Prefer MCP-backed automation (Claude Code or Codex) over direct console work when possible. The `vercel` and `neon` MCP servers are configured in both `.mcp.json` (Claude Code) and `.codex/config.toml` (Codex); each authenticates via OAuth on first connect.
 
 - Use Vercel MCP for deployments, domains, logs, and environment variables.
 - Use Neon MCP for branch inspection, SQL, and schema checks.
-- Manage Clerk-related app behavior through repository changes and Vercel environment variables first.
+- Manage Clerk-related app behavior through repository changes and Vercel environment variables first. Clerk is not wired as a management MCP — the official Clerk MCP server is read-only/docs-only and cannot manage users, orgs, or settings.
 
 This keeps infrastructure changes reproducible and easier to review.
 

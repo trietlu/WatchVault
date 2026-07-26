@@ -36,7 +36,7 @@ Important deployment notes:
 - Vercel `Production` and `Preview` are separate deployment contexts even when they run the same code.
 - Preview and production share the same Clerk instance but no longer share the same Neon branch.
 - Both frontend and backend projects are Git-connected and support branch-specific preview env overrides.
-- The backend currently stores uploads on local disk in development and in Vercel `/tmp` at runtime. `/tmp` is ephemeral and is not durable object storage.
+- The backend stores uploaded images in Vercel Blob as **private** objects (`storageProvider = 'vercel_blob'`) and serves them through the authenticated proxy route `GET /watches/:id/images/:fileId/content`. Local-disk storage under `UPLOADS_DIR` (served at `/uploads/*`) remains only as a legacy/dev fallback for older `FileRecord` rows with `storageProvider = 'local'`.
 
 ## Branch Workflow
 
@@ -215,7 +215,8 @@ The hosted deployment is intentionally split into separate frontend and backend 
 
 Repo-local and local-only Vercel/Codex wiring:
 
-- `.codex/config.toml`: repo-local Codex MCP configuration
+- `.mcp.json`: repo-local Claude Code MCP configuration (Vercel, Neon)
+- `.codex/config.toml`: repo-local Codex MCP configuration (Vercel, Neon)
 - `frontend/.vercel/project.json`: local link between `frontend/` and the frontend Vercel project
 - `backend/.vercel/project.json`: local link between `backend/` and the backend Vercel project
 
@@ -355,11 +356,16 @@ Production backend envs point at the production branch. Preview backend envs poi
 
 This repo is intended to be operated through MCP-backed automation when possible instead of manually editing vendor consoles.
 
+Configured MCP servers are declared in both `.mcp.json` (Claude Code) and `.codex/config.toml` (Codex), as remote Streamable HTTP endpoints that use OAuth on first connect:
+
+- `vercel` → `https://mcp.vercel.com`
+- `neon` → `https://mcp.neon.tech/mcp`
+
 Preferred workflow:
 
-- Use Codex plus **Vercel MCP** to inspect deployments, domains, logs, and environment variables, and to redeploy or verify services.
-- Use Codex plus **Neon MCP** to inspect projects and branches, run SQL, compare schemas, and prepare safe migrations.
-- Treat **Clerk** as shared external auth infrastructure and update its app-facing settings through repository changes and Vercel environment variables first. Use the Clerk dashboard only when the same capability is not exposed through the active toolchain.
+- Use **Vercel MCP** to inspect deployments, domains, logs, and environment variables, and to redeploy or verify services.
+- Use **Neon MCP** to inspect projects and branches, run SQL, compare schemas, and prepare safe migrations.
+- Treat **Clerk** as shared external auth infrastructure and update its app-facing settings through repository changes and Vercel environment variables first. Clerk is deliberately not wired as a management MCP: the official Clerk MCP server (`https://mcp.clerk.com/mcp`) is read-only and docs-only (SDK snippets) and cannot manage users, organizations, or settings. Use the Clerk dashboard only when the same capability is not exposed through the active toolchain.
 - Prefer changing vendor state through MCP-backed automation over manual console edits so the operational steps can be replayed and documented.
 
 This keeps infrastructure changes more reproducible, reviewable, and easier to document than ad hoc console edits.
@@ -400,19 +406,25 @@ WatchVault/
 - `POST /auth/login`
 - `POST /auth/google`
 - `POST /auth/facebook`
+- `GET /auth/me` (authenticated)
 
 ### Watches
+
+All routes require authentication.
 
 - `POST /watches`
 - `GET /watches`
 - `GET /watches/:id`
-- `POST /watches/:id/images`
-- `DELETE /watches/:id/images/:fileId`
 - `POST /watches/:id/events`
+- `POST /watches/:id/contracts` (upload a contract document, records a `CONTRACT_UPLOADED` event)
+- `POST /watches/:id/images`
+- `GET /watches/:id/images/:fileId/content` (authenticated image proxy for private Blob objects)
+- `DELETE /watches/:id/images/:fileId`
 
 ### Public
 
 - `GET /passports/:publicId`
+- `GET /uploads/*` (static serving of legacy local-disk uploads)
 - `GET /health`
 
 ## Testing
@@ -451,9 +463,8 @@ For recurring development and deployment issues beyond first-time setup, see [Tr
 
 ### Image upload fails
 
-- Verify `backend/uploads/watches` exists in local development.
+- Confirm Blob credentials are configured: `BLOB_STORE_ID` (with Vercel OIDC) or `BLOB_READ_WRITE_TOKEN`. Without one of these, Blob writes throw.
 - Confirm the file is under the 8 MB limit and uses an allowed image format.
-- On Vercel, remember uploads currently land in `/tmp` and are not durable.
 
 ### Watch images show as blank
 

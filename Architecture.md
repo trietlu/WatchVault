@@ -45,7 +45,7 @@ Backend API (Node.js + Express + TypeScript, separate Vercel project)
            |
            +--> Clerk token verification and user lookup
            |
-           +--> Local uploads in dev / Vercel /tmp in hosted runtime
+           +--> Vercel Blob (private image objects); local disk only as legacy/dev fallback
            |
            +--> EVM RPC via ethers.js (optional blockchain anchoring)
 ```
@@ -144,6 +144,7 @@ Location: `native/src`
 - `POST /auth/login`
 - `POST /auth/google`
 - `POST /auth/facebook`
+- `GET /auth/me` (authenticated; resolves the current user)
 
 ### 5.2 Watches
 
@@ -178,15 +179,22 @@ Location: `native/src`
 
 ### 6.3 WatchEvent
 
-- Event types include `MINT`, `SERVICE`, `TRANSFER`, `AUTH`, and `NOTE`
-- `payloadJson` and derived `payloadHash` are persisted
-- `txHash` and `blockNumber` are populated when blockchain anchoring succeeds
+- Event types are `MINT`, `SERVICE`, `TRANSFER`, `AUTH`, `NOTE`, `CONTRACT_UPLOADED`, and `CONTRACT_SIGNED`
+- `eventUid` (uuid) uniquely identifies each event; `schemaVersion` tracks the payload schema
+- `payloadJson` (canonical JSON string) and derived `payloadHash` are persisted; `documentHash` and `uriHash` are set for document-bearing events
+- Anchoring is a state machine, not a single flag:
+  - `anchorStatus` is one of `NOT_REQUIRED`, `PENDING`, `SUBMITTED`, `ANCHORED`, `FAILED_RETRYABLE`, `FAILED_FINAL`
+  - `anchorAttempts` and `anchorError` track retry progress
+  - `chainId`, `contractAddress`, `txHash`, `blockNumber`, `logIndex`, and `anchoredAt` are populated as anchoring proceeds
+- The source of truth for this model is `backend/prisma/schema.prisma`.
 
 ### 6.4 FileRecord
 
-- Associates uploaded images with watches and/or events
-- Current storage URL pattern: `/uploads/watches/<filename>`
-- Storage is durable only in local development today. The hosted Vercel runtime writes uploads to `/tmp`, which is ephemeral.
+- Associates uploaded files (images and contract documents) with watches and/or events
+- `storageProvider` is `vercel_blob` for new uploads (`local` for legacy rows); `storageKey` holds the Blob pathname and `url` the Blob URL
+- `visibility` defaults to `PRIVATE`; private objects are read only through the authenticated proxy route `GET /watches/:id/images/:fileId/content`
+- Additional fields: `type`, `mimeType`, `sizeBytes`, `checksumSha256`, `uploadedById`
+- Storage is durable: images live in Vercel Blob. Local disk under `UPLOADS_DIR` (served at `/uploads/*`) remains only as a legacy/dev fallback.
 
 ## 7. End-to-End Data Flows
 
@@ -229,13 +237,13 @@ Location: `native/src`
 
 1. Authenticated client posts `{ eventType, payload }` to `/watches/:id/events`.
 2. Backend verifies watch ownership.
-3. Backend persists the event and payload hash.
-4. If `BLOCKCHAIN_ENABLED=false`, backend returns immediately.
+3. Backend persists the event with its canonical `payloadJson`/`payloadHash` and an initial `anchorStatus` derived from the event type.
+4. If `BLOCKCHAIN_ENABLED=false` or `anchorStatus` is `NOT_REQUIRED`, backend returns immediately.
 5. If blockchain anchoring is enabled:
    - Backend calls `recordEvent(...)`
    - Waits for the receipt
-   - Updates the event with `txHash` and `blockNumber`
-6. If chain submission fails, the off-chain event still exists in the database.
+   - Advances `anchorStatus` (e.g. to `ANCHORED`) and records `txHash`, `blockNumber`, `logIndex`, `chainId`, `contractAddress`, and `anchoredAt`
+6. If chain submission fails, the off-chain event still exists in the database with a failure `anchorStatus` (`FAILED_RETRYABLE` / `FAILED_FINAL`) and `anchorError`.
 
 ### 7.6 Public Passport View Flow
 
@@ -259,7 +267,6 @@ Location: `native/src`
 - Current gaps and tradeoffs:
   - CORS is still permissive
   - No explicit token revocation strategy
-  - Hosted upload storage is not durable yet
   - Preview and production still share the same Clerk instance, so auth configuration remains coupled even though database state is now isolated by Neon branch
 
 ## 9. Native App Design (Current Implementation)
@@ -330,8 +337,8 @@ Location: `native/src`
 - Database:
   - Shared Neon project with separate production and preview branches
 - Files:
-  - Local disk in development
-  - `/tmp` in the Vercel runtime today
+  - Vercel Blob (private image objects) in all environments
+  - Local disk under `UPLOADS_DIR` only as a legacy/dev fallback
 - Secrets/config:
   - Local env files in development
   - Vercel environment variables in hosted environments
@@ -422,7 +429,14 @@ Operational rule:
 
 ### 10.5 Operational Model: MCP Over Consoles
 
-The preferred operational path is MCP-backed automation through tools like Codex rather than manual vendor-console edits.
+The preferred operational path is MCP-backed automation (Claude Code or Codex) rather than manual vendor-console edits.
+
+Configured MCP servers (remote, Streamable HTTP, OAuth on first connect) live in both `.mcp.json` (Claude Code) and `.codex/config.toml` (Codex):
+
+- `vercel` -> `https://mcp.vercel.com`
+- `neon` -> `https://mcp.neon.tech/mcp` (deprecated SSE fallback: `https://mcp.neon.tech/sse`; also accepts an API key in the `Authorization` header)
+
+Usage:
 
 - Vercel MCP is used to:
   - Inspect projects, domains, deployments, logs, and environment variables
@@ -432,14 +446,13 @@ The preferred operational path is MCP-backed automation through tools like Codex
   - Inspect projects and branches
   - Run SQL
   - Compare schemas and prepare safer migrations
-- Clerk-related operations are managed primarily through:
-  - Repository configuration
-  - Vercel environment variables
-  - App-level integration changes
+- Clerk is intentionally **not** wired as a management MCP:
+  - The official Clerk MCP server (`https://mcp.clerk.com/mcp`) is read-only and docs-only (SDK code snippets); it cannot manage users, organizations, or app settings.
+  - Clerk-related operations are therefore managed through repository configuration, Vercel environment variables, and app-level integration changes.
 
 Operational rule:
 
-- Prefer Codex + MCP for repeatable, auditable infrastructure work.
+- Prefer MCP for repeatable, auditable infrastructure work.
 - Use vendor dashboards only when the same capability is not available through the active automation surface.
 
 ### 10.6 Branch and Promotion Workflow
@@ -473,7 +486,7 @@ This workflow exists because frontend and backend are separate Vercel projects, 
 - Data:
   - Add indexes for ownership, public ID lookup, and event ordering
 - Files:
-  - Replace Vercel `/tmp` uploads with durable object storage
+  - Durable object storage is in place (private Vercel Blob); revisit CDN/caching and public-vs-private access policy as usage grows
 - Background jobs:
   - Move blockchain anchoring to queue-based async workers
 - Environments:
@@ -491,7 +504,7 @@ This workflow exists because frontend and backend are separate Vercel projects, 
 
 ## 13. Key File Reference
 
-- Repo-local MCP config: `.codex/config.toml`
+- Repo-local MCP config: `.mcp.json` (Claude Code) and `.codex/config.toml` (Codex)
 - Web layout: `frontend/src/app/layout.tsx`
 - Web routes: `frontend/src/app/**/page.tsx`
 - Web runtime config: `frontend/src/lib/config.ts`
