@@ -1,6 +1,6 @@
 # Plan: on-chain event anchoring for watch lifecycle
 
-- **Status:** Draft — pending human-operator review
+- **Status:** Reviewed & approved — implementation issues created
 - **Tracking issue:** [#2](https://github.com/trietlu/WatchVault/issues/2)
 - **Goal:** Reliably anchor watch-lifecycle events on-chain, with fully isolated staging (Base Sepolia, `84532`) and production (Base Mainnet, `8453`) chains, and expose independently-verifiable proof.
 
@@ -36,15 +36,16 @@ The skeleton is largely built. This plan **hardens** it; it does not start from 
 
 ---
 
-## 2. Decisions to confirm during review
+## 2. Decisions (resolved during review)
 
-These shape several tasks; please rule on them:
-
-- **D1 — `recordEvent` vs `anchorProof`.** The backend only uses `anchorProof`. Deprecate/remove `recordEvent`, or keep it? (Affects T1.)
-- **D2 — Privacy of `watchCommitment`.** Today `watchCommitment == serialNumberHash`. Anyone who knows a watch's serial can compute the hash and correlate its on-chain events. Acceptable (verifiability), or should the on-chain commitment be salted/separated from the serial hash? (Affects T8/T9.)
-- **D3 — Async mechanism.** Vercel Cron polling `PENDING`/`FAILED_RETRYABLE`, or an external queue (e.g. QStash/SQS)? Cron is simplest given the current Vercel-only footprint. (Affects T5/T6.)
-- **D4 — Anchoring policy per event type.** `initialAnchorStatus` currently marks `NOTE`, `AUTH_REQUEST`, `TRANSFER_INITIATED` as `NOT_REQUIRED`. Confirm which of the 12 `EVENT_TYPE_ID` types must anchor. (Affects T8.)
-- **D5 — Key model.** One key as both deployer and writer, or a separate low-privilege writer key authorized by the deployer/owner? (Affects T2/T3.)
+- **D1 — `recordEvent` vs `anchorProof`: REMOVE `recordEvent`.** The backend only uses `anchorProof`; `recordEvent` is dead code. (T1)
+- **D2 — Privacy of `watchCommitment`: DO NOT salt.** Keep `watchCommitment == serialNumberHash`. Rationale: transparent, independently-verifiable provenance is a product goal ("being open is key"), and **no PII is ever placed on-chain** — the contract stores only hashes (`payloadHash`, `documentHash`, `uriHash`). Accepted tradeoff (immutable): event existence, type, and timestamp per serial are public and permanent. Guardrail: continue to anchor **hashes only, never payload contents**. (T8/T9)
+- **D3 — Async mechanism: Vercel Cron.** A scheduled Vercel function drains `PENDING`/`FAILED_RETRYABLE`. Uses the existing Vercel-only footprint; no external queue. (T5/T6)
+- **D4 — Anchoring policy per event type: anchor settled facts, skip drafts/intents/notes.**
+  - **Anchor:** `MINT`, `SERVICE`, `TRANSFER`, `TRANSFER_ACCEPTED`, `AUTH_VERDICT`, `CONTRACT_SIGNED`, `CORRECTION`.
+  - **Do not anchor (`NOT_REQUIRED`):** `NOTE`, `AUTH_REQUEST`, `TRANSFER_INITIATED` (requests/notes/intents, not finalized provenance).
+  - For request→outcome pairs (`AUTH_REQUEST`→`AUTH_VERDICT`, `TRANSFER_INITIATED`→`TRANSFER_ACCEPTED`) anchor the outcome, not the request. `initialAnchorStatus` must be updated to match. (T8)
+- **D5 — Key model: separate keys in production; single key acceptable on staging.** Production uses a cold **owner/deployer** key (holds admin `setAuthorizedWriter`, kept offline) plus a separate hot **writer** key in the backend (`CHAIN_PRIVATE_KEY`), authorized via T3. If the hot key leaks, blast radius is limited to junk `ProofAnchored` events and the owner revokes it. Staging may reuse one deployer+writer key for convenience. (T2/T3)
 
 ---
 
@@ -162,9 +163,25 @@ T11                     (rollout, last)
 
 ## 5. Review log
 
-_To be completed with the human operator (satisfies issue #2's acceptance criteria)._
+Reviewed with the human operator (satisfies issue #2's acceptance criteria).
 
-- **Reviewed on:** _pending_
-- **Decisions (D1–D5):** _pending_
-- **Scope/priority changes:** _pending_
-- **Approved to create implementation issues:** _pending_
+- **Reviewed on:** 2026-07-26
+- **Decisions (D1–D5):** resolved — see §2. D1 remove `recordEvent`; D2 no salt (openness, hashes-only); D3 Vercel Cron; D4 anchor settled facts only; D5 separate keys in prod, single key OK on staging.
+- **Scope/priority changes:** none; task set T1–T11 approved as written.
+- **Approved to create implementation issues:** yes.
+
+### Implementation issues (created)
+
+| Task | Issue | Priority | Depends on |
+| --- | --- | --- | --- |
+| T1 Finalize contract + tests | [#3](https://github.com/trietlu/WatchVault/issues/3) | P0 | — |
+| T2 Network config + deploy | [#4](https://github.com/trietlu/WatchVault/issues/4) | P0 | #3 |
+| T3 Authorize backend signer | [#5](https://github.com/trietlu/WatchVault/issues/5) | P0 | #4 |
+| T4 Config + isolation guardrails | [#6](https://github.com/trietlu/WatchVault/issues/6) | P0 | — |
+| T5 Async anchoring + nonce safety | [#7](https://github.com/trietlu/WatchVault/issues/7) | P0 | #6 |
+| T6 Cron worker + retry/FINAL | [#8](https://github.com/trietlu/WatchVault/issues/8) | P0 | #7 |
+| T7 Reconcile SUBMITTED | [#9](https://github.com/trietlu/WatchVault/issues/9) | P1 | #8 |
+| T8 Event coverage | [#10](https://github.com/trietlu/WatchVault/issues/10) | P1 | #8 |
+| T9 Verification surface | [#11](https://github.com/trietlu/WatchVault/issues/11) | P1 | #10 |
+| T10 Observability + funding | [#12](https://github.com/trietlu/WatchVault/issues/12) | P2 | #8 |
+| T11 Rollout | [#13](https://github.com/trietlu/WatchVault/issues/13) | P1 | #9, #10, #11 |
