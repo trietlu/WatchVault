@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Autonomous coding workflow
+    url: https://github.com/trietlu/WatchVault/blob/main/.github/autonomous-workflow.md
+    about: How planning issues, implementation issues, and labels fit together for agent-driven work.
